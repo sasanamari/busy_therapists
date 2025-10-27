@@ -137,7 +137,6 @@ python src/protocol_generator.py --therapists data/therapists.json --output prot
    - [ ] BPtK endorsement
    - [ ] Installation instructions
    - [ ] Usage guide with examples
-   - [ ] **DECISION PENDING**: Acknowledge therapie.de as source or keep generic?
 
 2. **Responsible use policy**
    - [ ] State purpose: healthcare access, not spam

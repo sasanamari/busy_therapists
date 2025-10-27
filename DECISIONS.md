@@ -200,20 +200,6 @@ busy_therapists/
 
 ---
 
-### ⏸️ Acknowledge therapie.de in README? (TO BE DECIDED)
-**Options**:
-1. **Transparent**: "Data source: therapie.de" in README
-2. **Generic**: "Searches German therapist directories"
-
-**To decide**: After main code works, before making repo public
-
-**Considerations**:
-- Transparent = good faith, harder to object to
-- Generic = draws less attention
-- Recommendation: Lean toward transparent (shows integrity)
-
----
-
 ### ✅ Compliance Strategy
 **Decision**: Prepare to comply immediately if therapie.de objects
 
@@ -264,7 +250,6 @@ busy_therapists/
 - Installation instructions
 - Usage guide
 - Responsible use policy
-- **PENDING**: Acknowledge therapie.de or not?
 
 ---
 
@@ -362,7 +347,6 @@ python main.py --help
 - Should emails be logged for debugging?
 
 ### Before going public:
-- Should we acknowledge therapie.de in README?
 - Any final legal review needed?
 - Test with real users first?
 

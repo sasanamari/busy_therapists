@@ -78,13 +78,7 @@ An automated Python tool that:
 4. **Transparency**: Document legal basis and ethical purpose
 5. **Compliance readiness**: Prepared to take down immediately if therapie.de objects
 6. **Good faith**: Solving real problem, not hiding intentions
-
-### PENDING DECISION: Acknowledge therapie.de?
-**Question**: Should README explicitly state "Data source: therapie.de"?
-- **Pro**: Shows good faith, harder to object to
-- **Con**: Draws attention
-- **Current status**: To be decided before making repo public
-- **Recommendation**: Lean toward transparency
+7. **Generic public documentation**: Keep data sources generic in public-facing docs (README)
 
 ---
 

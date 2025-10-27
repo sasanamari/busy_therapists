@@ -201,8 +201,6 @@ git branch -M main
 git push -u origin main
 ```
 
-**IMPORTANT**: Before pushing, decide whether to acknowledge therapie.de in README (see DECISIONS.md)
-
 ---
 
 ## Configuration Files
