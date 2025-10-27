@@ -128,9 +128,24 @@ busy_therapists/
 ## Scraping Decisions
 
 ### ✅ Scraping Library
-**Decision**: Start with requests + BeautifulSoup, switch to Selenium if site requires JavaScript
+**Decision**: Use requests + BeautifulSoup (no Selenium needed)
 
-**Rationale**: BeautifulSoup is simpler and faster. Only use Selenium if necessary (adds complexity, requires browser driver).
+**Rationale**:
+- Site uses URL parameters for filters (not JavaScript-based)
+- Email addresses are in HTML (obfuscated but accessible)
+- BeautifulSoup is simpler, faster, and sufficient
+
+---
+
+### ✅ Email Obfuscation Handling
+**Decision**: Decode emails from `data-contact-email` attribute on profile pages
+
+**Implementation**:
+- Emails stored in button's `data-contact-email` attribute
+- Uses character substitution cipher (needs investigation - has bugs with numbers and special chars)
+- Extract from profile pages, not search results
+
+**Status**: Working but has decoding bugs (documented in CONTEXT_FOR_CLAUDE.md)
 
 ---
 

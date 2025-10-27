@@ -22,32 +22,36 @@ A Python-based terminal application that:
 
 ## Development Phases
 
-### Phase 1: Core Scraping (HIGHEST PRIORITY)
-**Goal**: Successfully extract therapist data from therapie.de
+### Phase 1: Core Scraping ✅ MOSTLY COMPLETE (has bugs)
+**Goal**: Successfully extract therapist info from therapie.de
+
+**Status**: Basic scraping works. Email decoder has bugs with special characters and numbers. See CONTEXT_FOR_CLAUDE.md for known issues.
 
 #### Tasks:
 1. **Analyze therapie.de structure**
-   - [ ] Visit therapie.de search page
-   - [ ] Inspect search form parameters
-   - [ ] Identify important filters: city, insurance type, "Freie Plätze", radius
-   - [ ] Examine search results HTML structure
-   - [ ] Check pagination mechanism
-   - [ ] Test with different search criteria
+   - [x] Visit therapie.de search page
+   - [x] Inspect search form parameters
+   - [x] Identify important filters: city, insurance type, "Freie Plätze", radius
+   - [x] Examine search results HTML structure
+   - [x] Check pagination mechanism
+   - [x] Test with different search criteria
 
 2. **Build scraper**
-   - [ ] Set up Python environment with dependencies
-   - [ ] Implement search request (POST/GET with parameters)
-   - [ ] Parse HTML to extract therapist cards/listings
-   - [ ] Extract fields: name, email, phone, wait time, specializations, address
-   - [ ] Handle pagination (if multiple pages of results)
-   - [ ] Add delays between requests (respect robots.txt)
-   - [ ] Error handling for missing fields
+   - [x] Set up Python environment with dependencies (conda env: busy_therapists)
+   - [x] Implement search request (GET with URL parameters)
+   - [x] Parse HTML to extract therapist profile URLs
+   - [x] Extract fields: name, email (others: TODO later)
+   - [x] Handle pagination (multi-page support implemented)
+   - [x] Add delays between requests (2.5s default)
+   - [x] Error handling for missing fields
+   - [x] Email decoder (has bugs - see known issues)
 
 3. **Test scraper**
-   - [ ] Test with Berlin, gesetzlich insurance, "Freie Plätze"
+   - [x] Test with Berlin, gesetzlich insurance, "Freie Plätze"
    - [ ] Test with different cities
-   - [ ] Verify email extraction accuracy
-   - [ ] Test edge cases (no results, many results, missing emails)
+   - [ ] Fix email decoder bugs (-, 8, and possibly other chars)
+   - [ ] Fix pagination duplicates
+   - [ ] Add retry logic for 429 errors
 
 **Output**: `src/scraper.py` - Command-line script that outputs JSON of therapists
 

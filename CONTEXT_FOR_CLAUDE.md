@@ -4,6 +4,23 @@
 
 ---
 
+## 🔴 KNOWN ISSUES (Session 2025-10-27)
+
+**Email decoder bugs found during testing:**
+1. **'-' character decodes incorrectly to '.'**
+   - Example: `m.brockmeyer-psychotherapie@outlook.de` decoded as `m.brockmeyer.psychotherapie@outlook.de`
+2. **'8' character decodes incorrectly to '7'**
+   - Example: `LPJ77@gmx.de` decoded as `LPJ88@gmx.de`
+3. **Investigation needed:** The decoding algorithm may have issues with numbers and special characters beyond just letters
+
+**Other issues to fix:**
+- Duplicate therapists appearing across pagination (same therapists on pages 1 and 2)
+- Need retry logic for 429 Too Many Requests errors
+
+**Current workaround:** Rate limiting increased to 2.5s to reduce 429 errors
+
+---
+
 ## Project Summary
 
 **Name**: Therapy Finder for Kostenerstattung
@@ -83,6 +100,24 @@ An automated Python tool that:
 ---
 
 ## Technical Architecture
+
+### Python Environment Setup
+
+**IMPORTANT**: This project uses a dedicated conda environment called `busy_therapists`.
+
+**For Claude Code sessions:**
+To run Python code for this project, use the full path to the conda environment's Python:
+```bash
+/opt/homebrew/Caskroom/miniforge/base/envs/busy_therapists/bin/python <script.py>
+```
+
+**For user (manual terminal):**
+```bash
+conda activate busy_therapists
+python <script.py>
+```
+
+**Dependencies:** Managed via `requirements.txt` (requests, beautifulsoup4, lxml)
 
 ### Current Decisions
 
