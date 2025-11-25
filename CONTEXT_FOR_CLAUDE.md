@@ -4,20 +4,33 @@
 
 ---
 
-## 🔴 KNOWN ISSUES (Session 2025-10-27)
+## 🟢 RECENT FIXES (Session 2025-11-25)
 
-**Email decoder bugs found during testing:**
-1. **'-' character decodes incorrectly to '.'**
-   - Example: `m.brockmeyer-psychotherapie@outlook.de` decoded as `m.brockmeyer.psychotherapie@outlook.de`
-2. **'8' character decodes incorrectly to '7'**
-   - Example: `LPJ77@gmx.de` decoded as `LPJ88@gmx.de`
-3. **Investigation needed:** The decoding algorithm may have issues with numbers and special characters beyond just letters
+**Email decoder - FIXED:**
+- ✅ Hyphen (`-`) now decodes correctly (was decoding as `.`)
+- ✅ Digits now decode correctly with shift-1 (e.g., `8` → `7`)
+- ✅ Confirmed punct_map mappings: `A` → `@`, `/` → `.`, `.` → `-`
+- ✅ Added likely mappings (unverified): `` ` `` → `_`, `,` → `+`
+- Verified working with real therapist emails (12+ tested)
 
-**Other issues to fix:**
+**Decoder algorithm details:**
+The email obfuscation uses a shift-1 cipher (ROT-1) applied to all character types:
+- **Letters**: Each letter shifts forward by 1 (a→b, z→a) with wraparound
+- **Digits**: Each digit shifts forward by 1 with wraparound (0→1, 9→0)
+- **Punctuation**: Explicit mappings in punct_map:
+  - Encoding: `@` → `A`, `.` → `/`, `-` → `.`, `_` → `` ` ``, `+` → `,`
+  - Decoding: Reverse of above
+
+**Verification notes:**
+- Tested with 12+ real therapist profiles from therapie.de
+- Underscores (`_`) and plus signs (`+`) not found in sample emails
+- Preventive mappings added for `_` and `+` in case they're used
+
+**Remaining issues to fix:**
 - Duplicate therapists appearing across pagination (same therapists on pages 1 and 2)
 - Need retry logic for 429 Too Many Requests errors
 
-**Current workaround:** Rate limiting increased to 2.5s to reduce 429 errors
+**Current status:** Rate limiting at 2.5s, decoder fully functional and ready for use
 
 ---
 

@@ -14,7 +14,7 @@ from pathlib import Path
 
 def decode_email(encoded: str) -> str:
     """
-    Decode encoded email address
+    Decode encoded email address using shift-1 cipher with punctuation mapping
 
     Args:
         encoded: Encoded email string
@@ -26,32 +26,48 @@ def decode_email(encoded: str) -> str:
         >>> decode_email("bmjdfAxpoefsmboe/fy")
         'alice@wonderland.ex'
     """
+    # Punctuation mappings (shift-1 cipher)
+    # Note: Based on ASCII shift-1 pattern (char + 1 to encode, char - 1 to decode)
+    punct_map = {
+        'A': '@',   # Confirmed via testing
+        '/': '.',   # Confirmed via testing
+        '.': '-',   # Confirmed via testing (hyphen encodes to period)
+        '`': '_',   # Likely but unverified (underscore would encode to backtick)
+        ',': '+',   # Likely but unverified (plus would encode to comma)
+    }
+
     decoded = []
 
     for char in encoded:
-        if char == 'A':
-            decoded.append('@')
-        elif char == '/':
-            decoded.append('.')
-        elif char.isalpha():
-            # Shift back by 1 in the alphabet
-            if char.islower():
-                decoded.append(chr((ord(char) - ord('a') - 1) % 26 + ord('a')))
-            else:
-                decoded.append(chr((ord(char) - ord('A') - 1) % 26 + ord('A')))
-        else:
-            # Keep other characters as-is
-            decoded.append(char)
+        # Check explicit punctuation mapping first
+        if char in punct_map:
+            decoded.append(punct_map[char])
+            continue
+
+        # Letters: shift back by 1
+        if char.isalpha():
+            base = ord('a') if char.islower() else ord('A')
+            decoded.append(chr((ord(char) - base - 1) % 26 + base))
+            continue
+
+        # Digits: shift back by 1 (with wraparound)
+        if char.isdigit():
+            decoded.append(str((int(char) - 1) % 10))
+            continue
+
+        # Otherwise keep as-is (shouldn't happen if encoding is consistent)
+        decoded.append(char)
 
     return ''.join(decoded)
 
 
-def get_therapist_profile(profile_url: str) -> Optional[Dict[str, str]]:
+def get_therapist_profile(profile_url: str, max_retries: int = 2) -> Optional[Dict[str, str]]:
     """
     Extract therapist info from a profile page
 
     Args:
         profile_url: Full URL to therapist profile (e.g., "https://www.therapie.de/profil/alice/")
+        max_retries: Maximum number of retries for rate limit errors (default: 2)
 
     Returns:
         Dictionary with therapist info if found, None if no email:
@@ -62,38 +78,56 @@ def get_therapist_profile(profile_url: str) -> Optional[Dict[str, str]]:
             # Future fields: "phone", "address", "specializations", etc.
         }
     """
-    try:
-        response = requests.get(profile_url, timeout=10)
-        response.raise_for_status()
+    retry_delays = [60, 300]  # 1 min, 5 min
 
-        soup = BeautifulSoup(response.content, 'lxml')
+    for attempt in range(max_retries + 1):
+        try:
+            response = requests.get(profile_url, timeout=10)
 
-        # Find the contact button with encoded email
-        contact_button = soup.find('button', id='contact-button')
+            # Handle rate limiting
+            if response.status_code == 429:
+                if attempt < max_retries:
+                    wait_time = retry_delays[attempt]
+                    print(f"    ⚠️  Rate limited (429). Waiting {wait_time}s before retry {attempt + 1}/{max_retries}...")
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    print(f"    ✗ Rate limited after {max_retries} retries, skipping")
+                    return None
 
-        if not contact_button or not contact_button.get('data-contact-email'):
+            response.raise_for_status()
+
+            soup = BeautifulSoup(response.content, 'lxml')
+
+            # Find the contact button with encoded email
+            contact_button = soup.find('button', id='contact-button')
+
+            if not contact_button or not contact_button.get('data-contact-email'):
+                return None
+
+            # Extract email
+            encoded_email = contact_button['data-contact-email']
+            decoded_email = decode_email(encoded_email)
+
+            # Extract name (usually in <h1> tag)
+            name_tag = soup.find('h1')
+            name = name_tag.get_text(strip=True) if name_tag else "Unknown"
+
+            return {
+                "name": name,
+                "email": decoded_email,
+                "profile_url": profile_url
+            }
+
+        except requests.RequestException as e:
+            # For non-429 errors, don't retry
+            print(f"Error fetching {profile_url}: {e}")
             return None
 
-        # Extract email
-        encoded_email = contact_button['data-contact-email']
-        decoded_email = decode_email(encoded_email)
-
-        # Extract name (usually in <h1> tag)
-        name_tag = soup.find('h1')
-        name = name_tag.get_text(strip=True) if name_tag else "Unknown"
-
-        return {
-            "name": name,
-            "email": decoded_email,
-            "profile_url": profile_url
-        }
-
-    except requests.RequestException as e:
-        print(f"Error fetching {profile_url}: {e}")
-        return None
+    return None
 
 
-def scrape_search_results(zip_code: str, insurance_type: int = 1, availability: int = 4, page: int = 1) -> list[str]:
+def scrape_search_results(zip_code: str, insurance_type: int = 1, availability: int = 4, page: int = 1, max_retries: int = 2) -> list[str]:
     """
     Scrape therapist profile URLs from a single search results page
 
@@ -102,6 +136,7 @@ def scrape_search_results(zip_code: str, insurance_type: int = 1, availability: 
         insurance_type: 1 = gesetzlich (statutory), 2 = privat (private)
         availability: 4 = Freie Plätze (free slots available)
         page: Page number (default: 1)
+        max_retries: Maximum number of retries for rate limit errors (default: 2)
 
     Returns:
         List of full profile URLs from this page
@@ -114,29 +149,47 @@ def scrape_search_results(zip_code: str, insurance_type: int = 1, availability: 
     }
 
     if page > 1:
-        params["seite"] = page
+        params["page"] = page
 
-    try:
-        response = requests.get(base_url, params=params, timeout=10)
-        response.raise_for_status()
+    retry_delays = [60, 300]  # 1 min, 5 min
 
-        soup = BeautifulSoup(response.content, 'lxml')
+    for attempt in range(max_retries + 1):
+        try:
+            response = requests.get(base_url, params=params, timeout=10)
 
-        # Find all profile links
-        # Profile links are in format: <a href="/profil/username/">
-        profile_links = []
-        for link in soup.find_all('a', href=True):
-            href = link['href']
-            if href.startswith('/profil/') and href.endswith('/'):
-                full_url = f"https://www.therapie.de{href}"
-                if full_url not in profile_links:  # Avoid duplicates
-                    profile_links.append(full_url)
+            # Handle rate limiting
+            if response.status_code == 429:
+                if attempt < max_retries:
+                    wait_time = retry_delays[attempt]
+                    print(f"⚠️  Rate limited (429). Waiting {wait_time}s before retry {attempt + 1}/{max_retries}...")
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    print(f"✗ Rate limited after {max_retries} retries, skipping page")
+                    return []
 
-        return profile_links
+            response.raise_for_status()
 
-    except requests.RequestException as e:
-        print(f"Error fetching search results: {e}")
-        return []
+            soup = BeautifulSoup(response.content, 'lxml')
+
+            # Find all profile links
+            # Profile links are in format: <a href="/profil/username/">
+            profile_links = []
+            for link in soup.find_all('a', href=True):
+                href = link['href']
+                if href.startswith('/profil/') and href.endswith('/'):
+                    full_url = f"https://www.therapie.de{href}"
+                    if full_url not in profile_links:  # Avoid duplicates
+                        profile_links.append(full_url)
+
+            return profile_links
+
+        except requests.RequestException as e:
+            # For non-429 errors, don't retry
+            print(f"Error fetching search results: {e}")
+            return []
+
+    return []
 
 
 def collect_therapists(
@@ -163,6 +216,7 @@ def collect_therapists(
         [{"name": "...", "email": "...", "profile_url": "..."}, ...]
     """
     collected = []
+    seen_urls = set()  # Track URLs we've already processed to avoid duplicates across pages
     page = 1
 
     print(f"Searching for {target_count} therapists in {zip_code}...")
@@ -182,6 +236,13 @@ def collect_therapists(
         for i, profile_url in enumerate(profile_urls, 1):
             if len(collected) >= target_count:
                 break
+
+            # Skip if we've already processed this URL
+            if profile_url in seen_urls:
+                print(f"  [{i}/{len(profile_urls)}] Skipping duplicate profile")
+                continue
+
+            seen_urls.add(profile_url)
 
             print(f"  [{i}/{len(profile_urls)}] Checking profile...")
             time.sleep(delay_seconds)
