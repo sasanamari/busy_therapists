@@ -1,0 +1,22 @@
+To: Dr. Anna Schmidt <a.schmidt@example.com>
+Subject: Inquiry for therapy appointment
+
+Dear Frau/Herr Dr. Anna Schmidt,
+
+I am looking for a therapy place and came across your profile through the therapist search.
+
+About me:
+- Name: John Doe
+- Insurance: private with Allianz
+- City: Berlin
+
+I am suffering from depression and anxiety. I have been previously diagnosed with: Major Depressive Disorder (F33.2) and would like to start therapy soon.
+
+Do you currently have available therapy places or can you put me on a waiting list? If yes, when could therapy begin?
+
+Do you offer therapy in English?
+
+I would very much appreciate a response.
+
+Best regards,
+John Doe

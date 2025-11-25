@@ -4,7 +4,9 @@
 
 ---
 
-## 🟢 RECENT FIXES (Session 2025-11-25)
+## 🟢 COMPLETED (Session 2025-11-25)
+
+### Phase 1: Scraping - COMPLETE ✅
 
 **Email decoder - FIXED:**
 - ✅ Hyphen (`-`) now decodes correctly (was decoding as `.`)
@@ -21,16 +23,47 @@ The email obfuscation uses a shift-1 cipher (ROT-1) applied to all character typ
   - Encoding: `@` → `A`, `.` → `/`, `-` → `.`, `_` → `` ` ``, `+` → `,`
   - Decoding: Reverse of above
 
-**Verification notes:**
-- Tested with 12+ real therapist profiles from therapie.de
-- Underscores (`_`) and plus signs (`+`) not found in sample emails
-- Preventive mappings added for `_` and `+` in case they're used
+**Pagination - FIXED:**
+- ✅ Changed URL parameter from `seite` to `page`
+- ✅ Added duplicate detection with `seen_urls` set
+- ✅ Verified pages now return different therapists
 
-**Remaining issues to fix:**
-- Duplicate therapists appearing across pagination (same therapists on pages 1 and 2)
-- Need retry logic for 429 Too Many Requests errors
+**Rate limiting - IMPLEMENTED:**
+- ✅ Retry logic with 60s and 300s delays for 429 errors
+- ✅ Applied to both search results and profile fetching
+- ✅ Base delay of 2.5s between requests
+- ✅ Tested successfully with 5 therapists
 
-**Current status:** Rate limiting at 2.5s, decoder fully functional and ready for use
+**Current status:** Phase 1 scraping fully functional and tested
+
+### Phase 2: Email Templates - COMPLETE ✅
+
+**Templates created:**
+- ✅ German therapy request (`templates/therapy_request.txt`)
+- ✅ English therapy request (`templates/therapy_request_en.txt`)
+- ✅ Support for optional `previous_diagnosis` field
+- ✅ English templates ask "Do you offer therapy in English?"
+
+**Email generator implemented (`src/email_generator.py`):**
+- ✅ Mail merge system with placeholder replacement
+- ✅ Language auto-detection (German/English)
+- ✅ Subject line extraction for both languages
+- ✅ Optional diagnosis formatting per language
+- ✅ Functions: `load_template()`, `generate_email()`, `generate_emails_for_therapists()`, `save_emails_to_json()`
+
+**Sample emails created:**
+- ✅ 4 sample emails in `samples/` directory with fake data
+- ✅ Documentation in `samples/README.md`
+- ✅ Script to regenerate samples: `generate_samples.py`
+
+**Decision: Single template approach**
+- Initially created Kostenerstattung-specific templates with legal references
+- User feedback: bureaucratic tone might discourage responses
+- **Simplified to single straightforward therapy inquiry template**
+- Focuses on: availability, waiting list, timeframe
+- More likely to get responses from therapists
+
+**Current status:** Phase 2 email generation fully functional and tested
 
 ---
 
@@ -144,22 +177,33 @@ python <script.py>
 ```
 busy_therapists/
 ├── src/
-│   ├── scraper.py              # Phase 1: PRIORITY
-│   ├── email_templates.py      # Phase 2
-│   ├── protocol_generator.py   # Phase 3
-│   ├── email_sender.py         # Phase 5
-│   └── config.py               # Constants, rate limits
+│   ├── scraper.py              # Phase 1: ✅ COMPLETE
+│   ├── email_generator.py      # Phase 2: ✅ COMPLETE
+│   ├── protocol_generator.py   # Phase 3: TODO
+│   ├── email_sender.py         # Phase 5: TODO
+│   └── config.py               # Constants, rate limits: TODO
 ├── templates/
-│   ├── therapy_request.txt     # Default email
-│   └── kostenerstattung.txt    # Kostenerstattung-specific
+│   ├── therapy_request.txt     # German template
+│   └── therapy_request_en.txt  # English template
+├── samples/                     # Example emails with fake data
+│   ├── README.md
+│   ├── sample_therapy_request_de.txt
+│   ├── sample_therapy_request_de_with_diagnosis.txt
+│   ├── sample_therapy_request_en.txt
+│   └── sample_therapy_request_en_with_diagnosis.txt
 ├── docs/
 │   └── BPtK_Ratgeber_Kostenerstattung.pdf  # Official guide
 ├── data/                        # Runtime (gitignored)
-│   ├── therapists.json
-│   ├── emails.json
-│   └── responses.json
-├── main.py                      # CLI entry point
-├── user_config.json             # User's personal info (gitignored)
+│   ├── test_therapists.json    # Sample scraped data (5 therapists)
+│   ├── therapists.json         # TODO
+│   ├── emails.json             # TODO
+│   └── responses.json          # TODO
+├── test_email_templates.py      # Tests email generation
+├── test_decoder.py              # Tests email decoder
+├── test_pagination.py           # Tests pagination
+├── generate_samples.py          # Generates sample emails
+├── main.py                      # CLI entry point: TODO
+├── user_config.example.json     # Template for user config
 └── requirements.txt
 ```
 
@@ -251,13 +295,18 @@ busy_therapists/
 ✅ Development roadmap defined
 ✅ Legal/ethical analysis completed
 ✅ Technical decisions made
+✅ **Phase 1 (Scraping) - COMPLETE**
+  - Email decoder implemented and tested (shift-1 cipher)
+  - Pagination fixed (duplicate detection)
+  - Rate limiting with retry logic (429 handling)
+  - Successfully tested with real therapie.de profiles
+✅ **Phase 2 (Email Templates) - COMPLETE**
+  - German and English templates created
+  - Mail merge system implemented
+  - Sample emails generated
+  - Tested with multiple scenarios
 
-❌ No code written yet
-❌ No dependencies installed yet
-❌ Scraping not implemented
-❌ No testing done
-
-**Next step**: Implement Phase 1 (scraping)
+**Next step**: Phase 3 (Protocol Generator)
 
 ---
 
@@ -480,4 +529,4 @@ python /Users/sasan/spicy_projects/busy_therapists/src/scraper.py --city Berlin
 
 ---
 
-Last updated: 2025-10-24
+Last updated: 2025-11-25
