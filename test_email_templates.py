@@ -14,7 +14,7 @@ print("=" * 60)
 print("TEST 1: German therapy request WITHOUT previous diagnosis")
 print("=" * 60)
 config1 = {
-    "patient_name": "Max Mustermann",
+    "patient_name": "Maxim Mustermann",
     "patient_city": "Berlin",
     "insurance_type": "gesetzlich",
     "insurance_company": "TK",
@@ -48,7 +48,7 @@ print("\n" + "=" * 60)
 print("TEST 3: English therapy request WITHOUT previous diagnosis")
 print("=" * 60)
 config3 = {
-    "patient_name": "John Doe",
+    "patient_name": "Jane Doe",
     "patient_city": "Berlin",
     "insurance_type": "private",
     "insurance_company": "Allianz",
@@ -65,7 +65,7 @@ print("\n" + "=" * 60)
 print("TEST 4: English therapy request WITH previous diagnosis")
 print("=" * 60)
 config4 = {
-    "patient_name": "John Doe",
+    "patient_name": "Jane Doe",
     "patient_city": "Berlin",
     "insurance_type": "private",
     "insurance_company": "Allianz",

@@ -82,9 +82,11 @@ python src/scraper.py --city Berlin --insurance gesetzlich --free-slots
    - [ ] Generate one email per therapist
 
 3. **User info collection**
-   - [ ] Create `user_config.json` template
+   - [ ] Create `meine_daten.csv` template (3 columns: Field, Your data, Notes)
+   - [ ] Read user data from .csv using built-in `csv` module
    - [ ] Document required fields
    - [ ] Add validation for required fields
+   - (Previous approach: `user_config.json` — kept as fallback for technical users)
 
 **Output**: `src/email_templates.py` + template files
 
@@ -159,38 +161,26 @@ python src/protocol_generator.py --therapists data/therapists.json --output prot
 
 ---
 
-### Phase 5: Batch Email Sender (LOWEST PRIORITY FOR MVP)
-**Goal**: Automate sending emails with delays
+### Phase 5: Email Output (HTML)
+**Goal**: Generate a browser-based email viewer so users can send emails from their own email client
 
 #### Tasks:
-1. **Research email sending options**
-   - [ ] Research SMTP (Gmail, etc.)
-   - [ ] Research OAuth authentication
-   - [ ] Research email service APIs (SendGrid, etc.)
-   - [ ] **DECISION TO BE MADE**: Which method to use?
+1. **Build HTML email output**
+   - [ ] Create `src/email_html_generator.py`
+   - [ ] Generate `emails.html` with all emails displayed
+   - [ ] Each email has: therapist name, to address, subject, body, "Open in email app" button (mailto: link)
+   - [ ] Open the file automatically in browser after generation
 
-2. **Implement email sender**
-   - [ ] Create `src/email_sender.py`
-   - [ ] Accept list of (therapist, email_content) pairs
-   - [ ] Implement batch sending with 2-3 minute delays
-   - [ ] Progress tracking/logging
-   - [ ] Error handling (failed sends)
-   - [ ] User provides email credentials securely
-
-3. **Manual response tracker**
+2. **Manual response tracker**
    - [ ] Simple JSON format for tracking responses
    - [ ] CLI command to mark therapists as "responded" / "rejected" / "accepted"
    - [ ] Update protocol with response info
 
-**Output**: Complete terminal application
+**Output**: `emails.html` file that opens in browser
 
-**Example usage**:
-```bash
-python main.py send-emails --emails data/emails.json --delay 180
-python main.py track-response --therapist "Dr. Mustermann" --status rejected
-```
+**Estimated time**: 1 session
 
-**Estimated time**: 2-3 sessions
+**Previous approach (kept as fallback)**: Batch SMTP/OAuth auto-sender with 2-3 min delays between emails. More automated but requires credential setup. See DECISIONS.md for details.
 
 ---
 

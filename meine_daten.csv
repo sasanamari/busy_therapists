@@ -1,0 +1,8 @@
+Field,Your data,Notes
+Name,Max Mustermann,Your full name. Used to sign the emails.
+Zip code,10117,Your postal code. Used to search for nearby therapists.
+Insurance type,gesetzlich,"Either 'gesetzlich' or 'privat'."
+Insurance company,TK (Techniker Krankenkasse),The name of your health insurance provider.
+Symptoms,Depressionen und Angstzustände,Brief description of your symptoms. This appears in the email body.
+Previous diagnosis,generalisierte Angststörung (F41.1),Optional. Your diagnosis code if you have one. Leave blank if not applicable.
+Your email,max.mustermann@gmail.com,Optional. Used in the protocol document only — not sent automatically.

@@ -10,7 +10,8 @@ from scraper import collect_therapists, save_therapists_to_json
 print("Testing complete collection workflow (5 therapists)...\n")
 
 therapists = collect_therapists(
-    zip_code="10117",
+    # zip_code="10117",
+    zip_code="10829",
     target_count=5,  # Small sample for testing
     insurance_type=1,
     availability=4,

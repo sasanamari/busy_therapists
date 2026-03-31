@@ -168,10 +168,11 @@ python <script.py>
 ### Current Decisions
 
 **Language**: Python (user is comfortable with it)
-**Interface**: Terminal/CLI first → GUI later
-**Data format**: JSON files (simple, no database)
+**Interface**: `python main.py` for technical users; PyInstaller executable for non-technical users (no Python install needed)
+**User input**: `meine_daten.csv` — 3-column CSV (Field, Your data, Notes). User fills in column B. Read via Python's built-in `csv` module. Opens as a table in Excel/Numbers. Previous approach (user_config.json) kept as fallback.
+**Data format**: JSON files internally (simple, no database)
 **Scraping**: requests + BeautifulSoup (start simple, use Selenium if needed)
-**Email method**: TBD (after scraping works) - likely SMTP or OAuth
+**Email delivery**: Generate `emails.html`, auto-open in browser. Each email displayed with a mailto: button — user sends from their own email client. No SMTP/OAuth/credentials needed. Previous approach (SMTP/OAuth batch auto-sender) kept as fallback in DECISIONS.md.
 
 ### Project Structure
 ```

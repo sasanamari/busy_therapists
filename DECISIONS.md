@@ -46,14 +46,17 @@ busy_therapists/
 
 ## Feature Decisions
 
-### ✅ Email Sending Method
-**Decision**: User clicks "Send All" once → app sends all emails with automatic 2-3 minute delays
+### ✅ Email Delivery Method
+**Decision**: Program generates `emails.html`, opens it automatically in the user's browser. Each email is displayed with body visible + a "Open in email app" button (mailto: link). User sends one by one from their own email client.
 
-**Alternatives considered**:
-- User clicks "Send" for each email individually (too tedious)
-- No delays (legally risky, spam-like)
+**Rationale**: Works for all users regardless of email provider (Gmail, Outlook, webmail, etc.). No credentials needed. No SMTP setup. Browser is universally available. mailto: links open default email app pre-filled — user just hits send.
 
-**Rationale**: Best balance of automation and legal safety. User authorizes batch, app handles timing.
+**Limitation**: Not fully automated — user still clicks send per email. Acceptable for MVP since it avoids all auth complexity and keeps the user in control.
+
+**Previous ideas (kept as fallback)**:
+- **SMTP** — user provides email credentials + app password. Too technical for non-technical users.
+- **OAuth (Gmail API)** — user grants app permission via Google. Requires Google Cloud setup. Even more complex.
+- **Batch auto-send with delays** — original plan: user clicks "Send All", app sends 30 emails over 60-90 min with 2-3 min delays. Requires SMTP/OAuth. Good for power users, bad for non-technical users. Can be revisited post-MVP.
 
 ---
 
@@ -106,22 +109,20 @@ busy_therapists/
 ---
 
 ### ✅ User Info Collection
-**Decision**: User edits a `user_config.json` file with their details
+**Decision**: User fills in `meine_daten.csv` — a 3-column file (Field, Your data, Notes)
 
-**Fields**:
-```json
-{
-  "name": "Max Mustermann",
-  "insurance": "gesetzlich",
-  "insurance_company": "TK",
-  "city": "Berlin",
-  "symptoms": "depression, anxiety",
-  "previous_diagnosis": "optional field",
-  "email": "user@example.com"
-}
-```
+**Layout**: Rows = one field each. Column A = field name (pre-filled), Column B = user fills in their data, Column C = explanation/notes (pre-filled).
 
-**Rationale**: Easy to edit, reusable, no interactive prompts needed.
+**Fields**: Name, Zip code, Insurance type, Insurance company, Symptoms, Previous diagnosis (optional), Your email (optional)
+
+**Rationale**: CSV is plain text — Claude (or any tool) can create it directly without a generator script. Opens as a table in Excel and Numbers. Users on Windows without Excel can use Google Sheets or Excel Online. Simpler dependency story than .xlsx (no openpyxl needed).
+
+**Note for users**: On Windows, right-click → "Open with" → Excel to see it as a table. On Mac, double-click opens Numbers automatically.
+
+**Previous ideas (kept as fallback)**:
+- `.xlsx` — better native table experience but requires openpyxl to generate and can't be created as plain text.
+- `user_config.json` — simple for technical users, confusing for non-technical users.
+- Interactive CLI wizard — no file to edit, but requires terminal comfort.
 
 ---
 

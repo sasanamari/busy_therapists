@@ -48,3 +48,4 @@ user_config.json
 # Sensitive data
 credentials.json
 .env
+old_files/
