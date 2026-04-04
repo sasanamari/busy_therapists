@@ -137,6 +137,23 @@ def validate_config(config: dict) -> tuple[list, list]:
     except ValueError:
         errors.append("'Number of therapists' must be a whole number (e.g. 20).")
 
+    # Warn about unrecognised optional filter values so they don't silently do nothing
+    optional_filters = [
+        ("Availability",            AVAILABILITY_MAP),
+        ("Insurance filter",        INSURANCE_MAP),
+        ("Foreign therapy language", LANGUAGE_MAP),
+        ("Therapy format",          THERAPY_TYPE_MAP),
+        ("Focus / topic",           FOCUS_MAP),
+        ("Therapist gender",        GENDER_MAP),
+    ]
+    for field, mapping in optional_filters:
+        value = config.get(field, "").strip()
+        if value and value.lower() not in mapping:
+            warnings.append(
+                f"'{field}' value '{value}' was not recognised — filter will be ignored. "
+                f"See docs/therapie_de_filter_params.md for valid options."
+            )
+
     return errors, warnings
 
 
@@ -160,6 +177,8 @@ def parse_config(config: dict) -> dict:
         "sender_email":      config.get("Your email", ""),
         "target_count":      int(config.get("Number of therapists", "20")),
         "email_language":    "en" if config.get("Email language", "").strip().lower() == "english" else "de",
+        # Raw language label for email template (e.g. "English", "Persian")
+        "therapy_language_label": config.get("Foreign therapy language", "").strip(),
         # Optional scraper filters — None means no filter applied
         "filter_availability": _lookup(config.get("Availability", ""), AVAILABILITY_MAP),
         "filter_insurance":    _lookup(config.get("Insurance filter", ""), INSURANCE_MAP),
@@ -414,13 +433,20 @@ def main():
     # --- 3. Generate emails ---
     print(f"\nGenerating {len(therapists)} emails...")
 
+    lang_label = config["therapy_language_label"]
+    if lang_label:
+        therapy_language_question = f"Do you offer therapy in {lang_label.capitalize()}?"
+    else:
+        therapy_language_question = "Do you offer therapy in German and English?"
+
     user_config = {
-        "patient_name":      config["patient_name"],
-        "patient_city":      config["patient_city"],
-        "insurance_type":    config["insurance_type"],
-        "insurance_company": config["insurance_company"],
-        "symptoms":          config["symptoms"],
-        "previous_diagnosis": config["previous_diagnosis"],
+        "patient_name":              config["patient_name"],
+        "patient_city":              config["patient_city"],
+        "insurance_type":            config["insurance_type"],
+        "insurance_company":         config["insurance_company"],
+        "symptoms":                  config["symptoms"],
+        "previous_diagnosis":        config["previous_diagnosis"],
+        "therapy_language_question": therapy_language_question,
     }
 
     emails = generate_emails_for_therapists(
@@ -446,6 +472,11 @@ def main():
     print(f"  Email files:       output/emails/")
     print(f"  Email viewer:      output/emails.html")
     print(f"  Response tracker:  output/responses.csv")
+
+    if warnings:
+        print("\nWarnings (filters that were ignored):")
+        for w in warnings:
+            print(f"  WARNING: {w}")
 
 
 def protocol_mode():

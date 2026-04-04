@@ -13,7 +13,7 @@ I am suffering from {symptoms}{previous_diagnosis} and would like to start thera
 
 Do you currently have available therapy places or can you put me on a waiting list? If yes, when could therapy begin?
 
-Do you offer therapy in English?
+{therapy_language_question}
 
 I would very much appreciate a response.
 
