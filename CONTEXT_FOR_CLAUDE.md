@@ -4,66 +4,36 @@
 
 ---
 
-## 🟢 COMPLETED (Session 2025-11-25)
+## 🟢 COMPLETED
 
-### Phase 1: Scraping - COMPLETE ✅
+### Phase 1: Scraping ✅
+- Email decoder (shift-1 cipher), pagination, rate limiting with 429 retry logic
+- Auto-expands search radius to 25km when default radius yields too few results
+- Tested end-to-end with real therapie.de data
 
-**Email decoder - FIXED:**
-- ✅ Hyphen (`-`) now decodes correctly (was decoding as `.`)
-- ✅ Digits now decode correctly with shift-1 (e.g., `8` → `7`)
-- ✅ Confirmed punct_map mappings: `A` → `@`, `/` → `.`, `.` → `-`
-- ✅ Added likely mappings (unverified): `` ` `` → `_`, `,` → `+`
-- Verified working with real therapist emails (12+ tested)
+### Phase 2: Email Templates ✅
+- German and English templates (`templates/therapy_request.txt`, `therapy_request_en.txt`)
+- Mail merge via `src/email_generator.py` — placeholder replacement, language detection, optional diagnosis field
+- English template asks "Do you offer therapy in [language]?" — dynamically filled from CSV; falls back to "Do you offer therapy in German and English?" if no language set
+- Single straightforward template (not bureaucratic) — more likely to get responses
 
-**Decoder algorithm details:**
-The email obfuscation uses a shift-1 cipher (ROT-1) applied to all character types:
-- **Letters**: Each letter shifts forward by 1 (a→b, z→a) with wraparound
-- **Digits**: Each digit shifts forward by 1 with wraparound (0→1, 9→0)
-- **Punctuation**: Explicit mappings in punct_map:
-  - Encoding: `@` → `A`, `.` → `/`, `-` → `.`, `_` → `` ` ``, `+` → `,`
-  - Decoding: Reverse of above
+### Phase 3: Protocol Generator ✅
+- `src/protocol_generator.py` — reads filled-in `output/responses.csv` + `my_data.csv`, outputs `output/protocol.txt`
+- Formal German document: patient info, search criteria, full contact list with dates/outcomes, declaration paragraph
+- Run with `python main.py --protocol`
 
-**Pagination - FIXED:**
-- ✅ Changed URL parameter from `seite` to `page`
-- ✅ Added duplicate detection with `seen_urls` set
-- ✅ Verified pages now return different therapists
+### main.py: Full end-to-end flow ✅
+- Reads `my_data.csv`, scrapes, generates emails, opens `output/emails.html` in browser
+- Output structure: `emails.html`, `responses.csv`, `therapists.txt`, `emails/`, `.data/` (internal JSONs)
+- `emails/` cleared at start of each run to prevent stale file accumulation
+- `profile_url` removed from `responses.csv` (keeps scraping source out of insurance documents)
 
-**Rate limiting - IMPLEMENTED:**
-- ✅ Retry logic with 60s and 300s delays for 429 errors
-- ✅ Applied to both search results and profile fetching
-- ✅ Base delay of 2.5s between requests
-- ✅ Tested successfully with 5 therapists
-
-**Current status:** Phase 1 scraping fully functional and tested
-
-### Phase 2: Email Templates - COMPLETE ✅
-
-**Templates created:**
-- ✅ German therapy request (`templates/therapy_request.txt`)
-- ✅ English therapy request (`templates/therapy_request_en.txt`)
-- ✅ Support for optional `previous_diagnosis` field
-- ✅ English templates ask "Do you offer therapy in English?"
-
-**Email generator implemented (`src/email_generator.py`):**
-- ✅ Mail merge system with placeholder replacement
-- ✅ Language auto-detection (German/English)
-- ✅ Subject line extraction for both languages
-- ✅ Optional diagnosis formatting per language
-- ✅ Functions: `load_template()`, `generate_email()`, `generate_emails_for_therapists()`, `save_emails_to_json()`
-
-**Sample emails created:**
-- ✅ 4 sample emails in `samples/` directory with fake data
-- ✅ Documentation in `samples/README.md`
-- ✅ Script to regenerate samples: `generate_samples.py`
-
-**Decision: Single template approach**
-- Initially created Kostenerstattung-specific templates with legal references
-- User feedback: bureaucratic tone might discourage responses
-- **Simplified to single straightforward therapy inquiry template**
-- Focuses on: availability, waiting list, timeframe
-- More likely to get responses from therapists
-
-**Current status:** Phase 2 email generation fully functional and tested
+### Search filters ✅
+- All therapie.de filter params wired: availability, insurance, foreign language, therapy format, focus/topic, therapist gender
+- Human-readable CSV values mapped to numeric IDs via lookup dicts in `main.py`
+- Unrecognised filter values print a warning at startup AND at the end of the run
+- `terminzeitraum` bug fixed: `4` = "wait over 12 months" (not "available now"); `1` = available now
+- Full param reference with English translations: `docs/therapie_de_filter_params.md`
 
 ---
 
@@ -71,7 +41,7 @@ The email obfuscation uses a shift-1 cipher (ROT-1) applied to all character typ
 
 **Name**: Therapy Finder for Kostenerstattung
 **Purpose**: Automate the bureaucratic process of finding therapists and documenting contacts for German health insurance cost reimbursement (Kostenerstattung)
-**Status**: Early development / MVP phase
+**Status**: MVP complete — tested end-to-end. Next: PyInstaller executable + documentation.
 **Tech Stack**: Python-first, terminal application, JSON data storage
 
 ---
@@ -92,6 +62,11 @@ When public insurance holders can't find therapists with public insurance (Kasse
 3. Document they had long wait times (3+ months)
 4. Find private practice therapist who can start soon
 
+**Additional TK-specific requirements:**
+- The patient must first attend **probationary sessions** (Probatorische Sitzungen) — 1-2 initial evaluation sessions with a therapist to confirm therapy is needed
+- The referring therapist must add an **urgency code** sticker/label to the form, indicating the therapy is urgent
+- These two requirements must be in place before TK will process a Kostenerstattung application
+
 **The problem**: Step 2 is tedious, requiring dozens of phone calls/emails and manual documentation. This is especially difficult for people with mental health issues.
 
 ---
@@ -102,7 +77,7 @@ An automated Python tool that:
 1. **Scrapes therapie.de** (only directory with "Freie Plätze" filter showing availability)
 2. **Extracts therapist emails** (not all have email addresses)
 3. **Generates personalized emails** from templates
-4. **Sends batch emails with delays** (2-3 min between sends, respects servers)
+4. **Opens emails.html in the browser** — user sends each email via their own email client (mailto: buttons)
 5. **Auto-generates the required protocol** for insurance application
 
 ---
@@ -152,9 +127,9 @@ An automated Python tool that:
 **IMPORTANT**: This project uses a dedicated conda environment called `busy_therapists`.
 
 **For Claude Code sessions:**
-To run Python code for this project, use the full path to the conda environment's Python:
+Use `mamba run` (confirmed working; `conda run` does not work):
 ```bash
-/opt/homebrew/Caskroom/miniforge/base/envs/busy_therapists/bin/python <script.py>
+mamba run -n busy_therapists python <script.py>
 ```
 
 **For user (manual terminal):**
@@ -178,100 +153,60 @@ python <script.py>
 ```
 busy_therapists/
 ├── src/
-│   ├── scraper.py              # Phase 1: ✅ COMPLETE
-│   ├── email_generator.py      # Phase 2: ✅ COMPLETE
-│   ├── protocol_generator.py   # Phase 3: TODO
-│   ├── email_sender.py         # Phase 5: TODO
-│   └── config.py               # Constants, rate limits: TODO
+│   ├── scraper.py              # ✅ Phase 1
+│   ├── email_generator.py      # ✅ Phase 2
+│   └── protocol_generator.py   # ✅ Phase 3
 ├── templates/
-│   ├── therapy_request.txt     # German template
-│   └── therapy_request_en.txt  # English template
-├── samples/                     # Example emails with fake data
-│   ├── README.md
-│   ├── sample_therapy_request_de.txt
-│   ├── sample_therapy_request_de_with_diagnosis.txt
-│   ├── sample_therapy_request_en.txt
-│   └── sample_therapy_request_en_with_diagnosis.txt
+│   ├── therapy_request.txt     # German email template
+│   └── therapy_request_en.txt  # English email template
 ├── docs/
-│   └── BPtK_Ratgeber_Kostenerstattung.pdf  # Official guide
-├── data/                        # Runtime (gitignored)
-│   ├── test_therapists.json    # Sample scraped data (5 therapists)
-│   ├── therapists.json         # TODO
-│   ├── emails.json             # TODO
-│   └── responses.json          # TODO
-├── test_email_templates.py      # Tests email generation
-├── test_decoder.py              # Tests email decoder
-├── test_pagination.py           # Tests pagination
-├── generate_samples.py          # Generates sample emails
-├── main.py                      # CLI entry point: TODO
-├── user_config.example.json     # Template for user config
+│   ├── BPtK_Ratgeber_Kostenerstattung.pdf
+│   └── therapie_de_filter_params.md  # All URL params with EN translations
+├── output/                     # gitignored — generated at runtime
+│   ├── emails.html             # ← open this to send emails
+│   ├── responses.csv           # ← fill in as replies come
+│   ├── therapists.txt          # human-readable therapist list
+│   ├── emails/                 # individual .txt files per email
+│   └── .data/                  # internal JSONs (therapists, emails)
+├── main.py                     # ✅ entry point
+├── my_data.csv.example         # committed template — user copies & renames
+├── my_data.csv                 # gitignored — user's personal data
 └── requirements.txt
 ```
 
-### Development Phases (In Order)
+### Development Phases
 
-**Phase 1**: Scraping (HIGHEST PRIORITY)
-- Extract therapist data from therapie.de
-- Focus on: name, email, wait time, specializations
-- Handle pagination, missing fields
-- **This is the foundation - nothing works without it**
-
-**Phase 2**: Email Templates
-- Template system with placeholders
-- Personalization with user info
-- User can customize
-
-**Phase 3**: Protocol Generator
-- Format data for insurance application
-- Follow BPtK guidelines
-- Export as text/PDF
-
-**TODO: Wait time filtering in scraper**
-- `collect_therapists()` currently only supports `availability=4` (Freie Plätze = immediate availability)
-- therapie.de's `terminzeitraum` URL parameter likely supports other values for filtering by wait time in months, but these have not been investigated
-- For Kostenerstattung, users may want to contact therapists with wait times up to 3+ months (still valid for documentation)
-- When implementing: inspect the therapie.de search form HTML to find all valid `terminzeitraum` values and map them to months
-- The `my_data.csv` already has a "Max wait time (months)" field ready — currently 0 (immediate only) is the only working value
-
-**Phase 4**: Documentation
-- README with legal basis
-- Responsible use policy
-- Installation guide
-
-**Phase 5**: Email Sender (LOWEST PRIORITY)
-- Batch sending with delays
-- Manual response tracking
-- **Note**: Email automation is least critical for MVP because user can copy-paste emails manually if needed
+- **Phase 1** ✅ Scraping
+- **Phase 2** ✅ Email templates (template 1 — general inquiry)
+- **Phase 2b** 🔲 Additional email templates (templates 2–6, see Next Steps)
+- **Phase 3** ✅ Protocol generator
+- **Phase 4** 🔲 Documentation (README legal basis, installation guide, responsible use)
+- **Phase 5** ❌ Dropped — batch SMTP email sending not worth it without cloud setup; mailto: approach is sufficient
+- **Phase 6** 🔲 PyInstaller executable — bundle for non-technical users (see Next Steps)
 
 ---
 
 ## Key Implementation Details
 
 ### Email Sending Flow
-1. User clicks "Send All" (not 30 individual clicks)
-2. App queues emails with 2-3 minute delays
-3. Takes ~60-90 minutes for 30 emails
-4. User can leave app running, walk away
-5. Progress tracking shows status
-
-**Rationale**: Balance between automation (useful) and rate limiting (respectful/legal)
+- Tool generates `output/emails.html` and opens it in the browser
+- Each email has an "Open in email app" button (mailto: link pre-filled with subject + body)
+- User sends from their own email client — no SMTP/OAuth/credentials needed
+- Batch SMTP sending was considered but dropped (not worth it without cloud setup)
 
 ### Rate Limiting
-- **Scraping**: 2-3 seconds between requests
-- **Email sending**: 2-3 minutes between emails
-- **Built-in**: Not configurable by user (prevents abuse)
+- **Scraping**: 2.5 seconds between requests (built-in, not configurable)
+- Retry logic for 429 errors: waits 60s then 300s before giving up
 
 ### Data Minimization
-- No persistent therapist database
-- Only store data for current session
-- Don't republish therapie.de data
-- User's personal data stays local
+- No persistent therapist database — only session data in `output/`
+- `output/` is gitignored
+- `my_data.csv` is gitignored — user's personal data stays local
+- `profile_url` excluded from `responses.csv` to avoid revealing scraping source in insurance documents
 
 ### Response Tracking
-- **MVP**: Manual logging (user marks responses in JSON/CLI)
-- **Future**: Gmail API integration (automated, but complex)
-
-**Rationale**: Manual is simpler and privacy-respecting for MVP. Automated is nice showcase for portfolio.
+- Manual: user fills in `output/responses.csv` as replies come in
+- Then runs `python main.py --protocol` to generate the formal contact protocol
 
 ---
 
@@ -298,67 +233,151 @@ busy_therapists/
 
 ## What Has Been Done
 
-✅ Project structure created
-✅ Documentation written (PROJECT_PLAN.md, DECISIONS.md, SETUP.md)
-✅ Development roadmap defined
-✅ Legal/ethical analysis completed
-✅ Technical decisions made
-✅ **Phase 1 (Scraping) - COMPLETE**
-  - Email decoder implemented and tested (shift-1 cipher)
-  - Pagination fixed (duplicate detection)
-  - Rate limiting with retry logic (429 handling)
-  - Successfully tested with real therapie.de profiles
-✅ **Phase 2 (Email Templates) - COMPLETE**
-  - German and English templates created
-  - Mail merge system implemented
-  - Sample emails generated
-  - Tested with multiple scenarios
+✅ Phase 1: Scraping
+✅ Phase 2: Email templates
+✅ Phase 3: Protocol generator
+✅ main.py: full end-to-end flow, tested
+✅ Search filters: all therapie.de params wired (availability, insurance, language, format, focus, gender)
+✅ Output cleanup: emails/ cleared per run, internal JSONs in .data/
+✅ Filter validation: warnings for unrecognised values (shown at start and end of run)
+✅ Dynamic language question in English email template
+✅ docs/therapie_de_filter_params.md with English translations
 
-**Current status (2026-04-01)**: main.py is working end-to-end. Scraping, email generation, HTML output, and response CSV all functional.
+**Current status (2026-04-04)**: MVP complete and tested end-to-end. All phases 1–3 done and committed.
 
-**Immediate TODO list (do these in order):**
+**Next steps (in order):**
 
-### 1. Output folder cleanup
-- Clear `output/emails/` at the start of each run (files accumulate across runs, causing duplicates)
-- Move `emails.json` and `therapists.json` to `output/.data/` — they are internal, not user-facing
-- Clean output structure should be:
-  ```
-  output/
-  ├── emails.html        ← open this to send emails
-  ├── responses.csv      ← fill in as replies come
-  ├── therapists.txt     ← human-readable list
-  ├── emails/            ← individual email .txt files
-  └── .data/             ← internal JSON files
-  ```
+### 1. Phase 4: Documentation
+- Update README with:
+  - Legal basis section (§13 Abs. 3 SGB V, BPtK endorsement)
+  - Clear explanation of the Kostenerstattung process (see below for details)
+  - Step-by-step usage instructions
+  - Responsible use policy
+- The README should mention the full manual process the user needs to follow, including probationary sessions and urgency code (see Kostenerstattung Process section above)
 
-### 2. Remove Profile URL from responses.csv
-- The URL column reveals the scraping source, which could be problematic if submitted to insurance
-- Keep name, email, address — remove profile_url
+### 2. Phase 2b: Additional Email Templates
 
-### 3. Add search filters to scraper
-- All filter URL parameters are documented in `docs/therapie_de_filter_params.md` — read that first
-- **Bug to fix**: `terminzeitraum=4` was previously thought to mean "available now" — it actually means "wait over 12 months". Available now = `terminzeitraum=1`. Fix this in `scraper.py` where it's commented out.
-- Add these optional fields to `my_data.csv` and `my_data.csv.example` (all optional, leave blank = no filter):
-  - `Therapy language` → `sprache` (e.g. "English" → 3, "Deutsch" = no filter needed)
-  - `Availability` → `terminzeitraum` (e.g. "available", "3 months", "12 months")
-  - `Insurance` → `abrechnungsverfahren` (already in code but commented out — uncomment and wire to CSV)
-  - `Therapy type` → `therapieangebot` (e.g. "individual", "group")
-  - Keep `verfahren`, `arbeitsschwerpunkt`, `geschlecht` out of CSV for now — too detailed for most users
-- In `scrape_search_results()`: un-comment `abrechnungsverfahren`, add the new params as optional (only include in request if user provided a value)
-- Use human-readable values in CSV (e.g. "English", "available now") and map to numeric IDs in `main.py` using lookup dicts
+We need 6 templates in total. Template 1 already exists. The remaining 5 need to be built.
 
-### 4. Phase 3: Protocol Generator (`src/protocol_generator.py`)
-- Takes `output/responses.csv` (after user fills it in) as input
-- Generates a formal document listing all therapists contacted, dates, and outcomes
-- Format: clean plain text (PDF optional later)
-- Should follow BPtK guidelines (see `docs/BPtK_Ratgeber_Kostenerstattung.pdf`)
-- Include: patient info, search criteria used, list of contacts with dates/responses, summary statistics
+**Overview of all templates:**
 
-### 5. Commit everything
-- Nothing has been committed since the last session
-- Files changed: `src/scraper.py`, `main.py`, `my_data.csv`, `my_data.csv.example`
+| # | File | Purpose | Recipient |
+|---|---|---|---|
+| 1 | `therapy_request.txt` / `_en.txt` | ✅ Exists — general therapy inquiry | Any therapist (public or private) |
+| 2 | `probationary_request.txt` | Ask for Probatorische Sitzungen (1-2 eval sessions) | A therapist willing to do the evaluation |
+| 3 | `kassenzulassung_contact.txt` | Ask public (Kassenzulassung) therapists for availability — for documentation purposes | Public therapists |
+| 4 | `insurance_application.txt` | Formal Kostenerstattung application letter | Health insurance company (Krankenkasse) |
+| 5 | `private_therapist_inquiry.txt` | Ask private therapist: can they start soon + do they have Fachkunde in a Richtlinienverfahren? | Private practice therapists |
+| 6 | `widerspruch.txt` | Formal appeal / Widerspruch after insurance rejection | Health insurance company |
 
-**Next step**: Phase 3 (Protocol Generator)
+**Templates provided verbatim in the BPtK PDF (use these as the basis):**
+
+*Template 4 — Insurance application letter (from PDF p.8):*
+```
+[Anschrift des Versicherten]
+[Anschrift der Krankenkasse]          Ort, Datum
+
+Versichertennummer: [Nummer]
+
+Antrag auf ambulante Psychotherapie und Kostenerstattung nach § 13 Absatz 3 SGB V
+
+Sehr geehrte Damen und Herren,
+
+hiermit beantrage ich, dass Sie die Kosten, die mir durch die ambulante Psychotherapie
+bei Frau/Herrn [Name Therapeut:in] entstehen, übernehmen und mir dies zusichern.
+Frau/Herr [Name] ist ein approbierter Psychotherapeut/eine approbierte Psychotherapeutin
+in einem Richtlinienverfahren, verfügt aber nicht über eine Zulassung zur gesetzlichen
+Krankenversicherung.
+
+Wie Sie meinem beigelegten Protokoll entnehmen können, habe ich mich mehrfach vergeblich
+bemüht, einen Psychotherapeuten mit Kassenzulassung zu finden, der mich rechtzeitig
+behandeln kann. Meine Psychotherapeutensuche ergab, dass ich mehr als [X] Monate auf
+einen ersten Termin warten müsste. Dagegen besteht die Möglichkeit, dass ich bei
+Frau/Herrn [Name] kurzfristig mit einer Behandlung beginnen könnte. Eine entsprechende
+Bescheinigung lege ich bei. Ich lege Ihnen des Weiteren eine Bescheinigung eines
+[Hausarztes/Facharztes/Psychotherapeuten] bei, der mir dringend eine ambulante
+Psychotherapie empfiehlt.
+
+Falls Sie meinem Antrag nicht zustimmen, nennen Sie mir bitte – so schnell wie möglich –
+einen zugelassenen Psychotherapeuten in der Nähe meines Wohnortes, bei dem ich
+kurzfristig einen Termin erhalte.
+
+Mit freundlichen Grüßen
+[Unterschrift]
+```
+
+*Template 6 — Widerspruch / formal appeal (from PDF p.9):*
+```
+[Anschrift des Versicherten]
+[Anschrift der Krankenkasse]          Ort, Datum
+
+Versichertennummer: [Nummer]
+
+Widerspruch
+Ihr Schreiben vom [Datum des Ablehnungsschreibens]
+
+Sehr geehrte Damen und Herren,
+
+hiermit lege ich Widerspruch gegen Ihr Schreiben vom [Datum] ein, mit dem Sie es ablehnen,
+die Kosten, die mir durch die ambulante Psychotherapie bei Frau/Herrn [Name] entstehen,
+zu übernehmen. Meinem Antrag lagen die erforderlichen Unterlagen bei, aus denen hervorgeht,
+dass die Anspruchsvoraussetzungen vorliegen.
+
+Ich bitte Sie deshalb erneut, meinen Antrag zu genehmigen. Sollten Sie dem Antrag nicht
+stattgeben, werde ich meinen Anspruch gerichtlich durchsetzen und die Aufsichtsbehörde
+sowie den Patientenbeauftragten der Bundesregierung informieren.
+
+Mit freundlichen Grüßen
+[Unterschrift]
+```
+
+**Template details:**
+
+**Template 2 — Probationary session request:**
+- Ask if therapist can offer Probatorische Sitzungen (1-2 sessions)
+- These sessions result in a written certificate that therapy is medically necessary
+- Tone: warm, personal — not bureaucratic
+
+**Template 3 — Public therapist contact (for documentation):**
+- Short email asking if they have capacity for a Kassenzulassung patient
+- Expectation is they won't — the point is building the *Protokoll der vergeblichen Suche*
+- Must feel like a genuine inquiry, not a form letter
+- This is the template most likely to be sent in bulk (20-30 emails)
+
+**Template 4 — Insurance application letter:**
+- Formal letter to Krankenkasse requesting Kostenerstattung under §13 Abs. 3 SGB V
+- BPtK guide provides exact wording — use it as the basis
+- Needs placeholders for: patient info, private therapist name, wait time found, attachments list
+- Key line: "Falls Sie meinem Antrag nicht zustimmen, nennen Sie mir bitte – so schnell wie möglich – einen zugelassenen Psychotherapeuten in der Nähe meines Wohnortes, bei dem ich kurzfristig einen Termin erhalte."
+- This is a letter (not an email) — output as a formatted .txt for printing
+
+**Template 5 — Private therapist inquiry:**
+- Ask two specific things (per BPtK guide):
+  1. Can they start treatment soon (kurzfristig)?
+  2. Do they have *Fachkunde in einem Richtlinienverfahren*?
+- Ask them to confirm both in writing if yes
+- Richtlinienverfahren = Analytische Psychotherapie, tiefenpsychologisch fundierte Psychotherapie, or Verhaltenstherapie
+
+**Template 6 — Widerspruch (formal appeal):**
+- BPtK guide provides exact wording — use it as the basis
+- Formal objection to rejection of Kostenerstattung application
+- States: will pursue in court + notify *Aufsichtsbehörde* + *Patientenbeauftragter der Bundesregierung*
+- Needs placeholders for: rejection letter date, patient info, private therapist name
+- Also a letter for printing, not an email
+
+**Implementation notes:**
+- All templates need German + English versions (same pattern as template 1)
+- Templates 4 and 6 are letters (for printing), not emails — the HTML viewer should show them differently (no mailto: button, just a "Copy text" or "Print" button)
+- The `my_data.csv` will need new fields: private therapist name + address (for templates 4-6), insurance rejection letter date (for template 6)
+- The scraper flow is only relevant for templates 1, 3, and 5 — templates 2, 4, 6 are one-off documents
+
+### 3. Phase 4: Documentation
+- Bundle into a double-clickable executable for non-technical users (no Python install needed)
+- **Critical**: `my_data.csv` must live **outside** the bundle — next to the executable — so users can edit it
+- `templates/` must be bundled as data files (PyInstaller `--add-data`)
+- Path handling: use `sys._MEIPASS` when frozen, `Path(__file__).parent` otherwise — apply this pattern wherever `base_dir` is used in `main.py`
+- Ship as: executable + `my_data.csv.example` (user renames to `my_data.csv`) + short README
+- Target platforms: macOS (`.app`) first, Windows (`.exe`) later
 
 ---
 
@@ -581,4 +600,4 @@ python /Users/sasan/spicy_projects/busy_therapists/src/scraper.py --city Berlin
 
 ---
 
-Last updated: 2025-11-25
+Last updated: 2026-04-04
