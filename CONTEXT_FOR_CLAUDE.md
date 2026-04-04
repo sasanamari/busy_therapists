@@ -169,7 +169,7 @@ python <script.py>
 
 **Language**: Python (user is comfortable with it)
 **Interface**: `python main.py` for technical users; PyInstaller executable for non-technical users (no Python install needed)
-**User input**: `meine_daten.csv` — 3-column CSV (Field, Your data, Notes). User fills in column B. Read via Python's built-in `csv` module. Opens as a table in Excel/Numbers. Previous approach (user_config.json) kept as fallback.
+**User input**: `my_data.csv` — 3-column CSV (Field, Your data, Notes). User fills in column B. Read via Python's built-in `csv` module. Opens as a table in Excel/Numbers. `my_data.csv` is gitignored; `my_data.csv.example` is the committed template — users copy and rename it. Previous approach (user_config.json) kept as fallback.
 **Data format**: JSON files internally (simple, no database)
 **Scraping**: requests + BeautifulSoup (start simple, use Selenium if needed)
 **Email delivery**: Generate `emails.html`, auto-open in browser. Each email displayed with a mailto: button — user sends from their own email client. No SMTP/OAuth/credentials needed. Previous approach (SMTP/OAuth batch auto-sender) kept as fallback in DECISIONS.md.
@@ -225,6 +225,13 @@ busy_therapists/
 - Format data for insurance application
 - Follow BPtK guidelines
 - Export as text/PDF
+
+**TODO: Wait time filtering in scraper**
+- `collect_therapists()` currently only supports `availability=4` (Freie Plätze = immediate availability)
+- therapie.de's `terminzeitraum` URL parameter likely supports other values for filtering by wait time in months, but these have not been investigated
+- For Kostenerstattung, users may want to contact therapists with wait times up to 3+ months (still valid for documentation)
+- When implementing: inspect the therapie.de search form HTML to find all valid `terminzeitraum` values and map them to months
+- The `my_data.csv` already has a "Max wait time (months)" field ready — currently 0 (immediate only) is the only working value
 
 **Phase 4**: Documentation
 - README with legal basis
@@ -306,6 +313,50 @@ busy_therapists/
   - Mail merge system implemented
   - Sample emails generated
   - Tested with multiple scenarios
+
+**Current status (2026-04-01)**: main.py is working end-to-end. Scraping, email generation, HTML output, and response CSV all functional.
+
+**Immediate TODO list (do these in order):**
+
+### 1. Output folder cleanup
+- Clear `output/emails/` at the start of each run (files accumulate across runs, causing duplicates)
+- Move `emails.json` and `therapists.json` to `output/.data/` — they are internal, not user-facing
+- Clean output structure should be:
+  ```
+  output/
+  ├── emails.html        ← open this to send emails
+  ├── responses.csv      ← fill in as replies come
+  ├── therapists.txt     ← human-readable list
+  ├── emails/            ← individual email .txt files
+  └── .data/             ← internal JSON files
+  ```
+
+### 2. Remove Profile URL from responses.csv
+- The URL column reveals the scraping source, which could be problematic if submitted to insurance
+- Keep name, email, address — remove profile_url
+
+### 3. Add search filters to scraper
+- All filter URL parameters are documented in `docs/therapie_de_filter_params.md` — read that first
+- **Bug to fix**: `terminzeitraum=4` was previously thought to mean "available now" — it actually means "wait over 12 months". Available now = `terminzeitraum=1`. Fix this in `scraper.py` where it's commented out.
+- Add these optional fields to `my_data.csv` and `my_data.csv.example` (all optional, leave blank = no filter):
+  - `Therapy language` → `sprache` (e.g. "English" → 3, "Deutsch" = no filter needed)
+  - `Availability` → `terminzeitraum` (e.g. "available", "3 months", "12 months")
+  - `Insurance` → `abrechnungsverfahren` (already in code but commented out — uncomment and wire to CSV)
+  - `Therapy type` → `therapieangebot` (e.g. "individual", "group")
+  - Keep `verfahren`, `arbeitsschwerpunkt`, `geschlecht` out of CSV for now — too detailed for most users
+- In `scrape_search_results()`: un-comment `abrechnungsverfahren`, add the new params as optional (only include in request if user provided a value)
+- Use human-readable values in CSV (e.g. "English", "available now") and map to numeric IDs in `main.py` using lookup dicts
+
+### 4. Phase 3: Protocol Generator (`src/protocol_generator.py`)
+- Takes `output/responses.csv` (after user fills it in) as input
+- Generates a formal document listing all therapists contacted, dates, and outcomes
+- Format: clean plain text (PDF optional later)
+- Should follow BPtK guidelines (see `docs/BPtK_Ratgeber_Kostenerstattung.pdf`)
+- Include: patient info, search criteria used, list of contacts with dates/responses, summary statistics
+
+### 5. Commit everything
+- Nothing has been committed since the last session
+- Files changed: `src/scraper.py`, `main.py`, `my_data.csv`, `my_data.csv.example`
 
 **Next step**: Phase 3 (Protocol Generator)
 

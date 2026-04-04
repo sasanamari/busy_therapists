@@ -109,7 +109,7 @@ busy_therapists/
 ---
 
 ### ✅ User Info Collection
-**Decision**: User fills in `meine_daten.csv` — a 3-column file (Field, Your data, Notes)
+**Decision**: User fills in `my_data.csv` — a 3-column file (Field, Your data, Notes)
 
 **Layout**: Rows = one field each. Column A = field name (pre-filled), Column B = user fills in their data, Column C = explanation/notes (pre-filled).
 

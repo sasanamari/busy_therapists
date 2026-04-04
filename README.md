@@ -68,13 +68,25 @@ pip install -r requirements.txt
 
 ## Usage
 
-> **Note**: Full usage instructions will be added as features are implemented.
+### 1. Set up your data file
 
-### Phase 1: Search for Therapists (In Development)
+Copy the example data file and fill in your details:
 
 ```bash
-python src/scraper.py --city Berlin --insurance gesetzlich --free-slots
+cp my_data.csv.example my_data.csv
 ```
+
+Then open `my_data.csv` in Excel or Numbers and replace the example values in the **Your data** column with your own information. The **Notes** column explains each field.
+
+> `my_data.csv` is gitignored — your personal data stays local and will never be committed.
+
+### 2. Run the tool
+
+```bash
+python main.py
+```
+
+The tool will scrape therapists near your zip code, generate personalized emails, and open `output/emails.html` in your browser. From there, click **Open in email app** to send each email from your own email client.
 
 ---
 

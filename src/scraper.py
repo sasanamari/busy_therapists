@@ -113,9 +113,18 @@ def get_therapist_profile(profile_url: str, max_retries: int = 2) -> Optional[Di
             name_tag = soup.find('h1')
             name = name_tag.get_text(strip=True) if name_tag else "Unknown"
 
+            # Extract address
+            street = soup.find(itemprop="streetAddress")
+            postal = soup.find(itemprop="postalCode")
+            city = soup.find(itemprop="addressLocality")
+            address = " ".join(
+                tag.get_text(strip=True) for tag in [street, postal, city] if tag
+            )
+
             return {
                 "name": name,
                 "email": decoded_email,
+                "address": address,
                 "profile_url": profile_url
             }
 
@@ -127,27 +136,56 @@ def get_therapist_profile(profile_url: str, max_retries: int = 2) -> Optional[Di
     return None
 
 
-def scrape_search_results(zip_code: str, insurance_type: int = 1, availability: int = 4, page: int = 1, max_retries: int = 2) -> list[str]:
+def scrape_search_results(
+    zip_code: str,
+    page: int = 1,
+    search_radius: int = None,
+    max_retries: int = 2,
+    insurance_type: int = None,
+    availability: int = None,
+    language: int = None,
+    therapy_type: int = None,
+    focus: int = None,
+    gender: int = None,
+) -> list[str]:
     """
     Scrape therapist profile URLs from a single search results page
 
     Args:
         zip_code: German postal code (e.g., "10117")
-        insurance_type: 1 = gesetzlich (statutory), 2 = privat (private)
-        availability: 4 = Freie Plätze (free slots available)
         page: Page number (default: 1)
+        search_radius: Search radius in km. None = therapie.de default (~10km).
+                       Use 25 as fallback when default radius yields too few results.
         max_retries: Maximum number of retries for rate limit errors (default: 2)
+        insurance_type: abrechnungsverfahren (1=GKV, 2=PKV, 3=self-pay, 6=Kostenerstattung).
+        availability: terminzeitraum (1=available now, 2=up to 3 months, 3=over 3 months,
+                      4=over 12 months).
+        language: sprache (3=English, 26=Persian, etc.).
+        therapy_type: therapieangebot (1=individual, 2=family, 3=group, etc.).
+        focus: arbeitsschwerpunkt (2=anxiety, 10=depression, 30=ADHD, etc.).
+        gender: geschlecht (1=male, 2=female, 4=non-binary).
+        All filter params default to None = no filter applied.
 
     Returns:
         List of full profile URLs from this page
     """
     base_url = "https://www.therapie.de/therapeutensuche/ergebnisse/"
-    params = {
-        "ort": zip_code,
-        "abrechnungsverfahren": insurance_type,
-        "terminzeitraum": availability,
-    }
+    params = {"ort": zip_code}
 
+    if insurance_type is not None:
+        params["abrechnungsverfahren"] = insurance_type
+    if availability is not None:
+        params["terminzeitraum"] = availability
+    if language is not None:
+        params["sprache"] = language
+    if therapy_type is not None:
+        params["therapieangebot"] = therapy_type
+    if focus is not None:
+        params["arbeitsschwerpunkt"] = focus
+    if gender is not None:
+        params["geschlecht"] = gender
+    if search_radius is not None:
+        params["search_radius"] = search_radius
     if page > 1:
         params["page"] = page
 
@@ -195,56 +233,79 @@ def scrape_search_results(zip_code: str, insurance_type: int = 1, availability: 
 def collect_therapists(
     zip_code: str,
     target_count: int = 20,
-    insurance_type: int = 1,
-    availability: int = 4,
     max_pages: int = 10,
-    delay_seconds: float = 2.5
+    delay_seconds: float = 2.5,
+    insurance_type: int = None,
+    availability: int = None,
+    language: int = None,
+    therapy_type: int = None,
+    focus: int = None,
+    gender: int = None,
 ) -> List[Dict[str, str]]:
     """
-    Collect therapist data until target count is reached
+    Collect therapist data until target count is reached.
+
+    Starts with the default search radius. If results run out before reaching
+    target_count, automatically retries with a 25km radius.
 
     Args:
         zip_code: German postal code (e.g., "10117")
         target_count: Number of therapists with valid emails to collect
-        insurance_type: 1 = gesetzlich (statutory), 2 = privat (private)
-        availability: 4 = Freie Plätze (free slots available)
         max_pages: Maximum number of search result pages to process
         delay_seconds: Delay between requests (default: 2.5 seconds)
+        insurance_type, availability, language, therapy_type, focus, gender:
+            Optional search filters. All default to None (no filter applied).
+            See scrape_search_results() for value meanings.
 
     Returns:
         List of dictionaries containing therapist info:
         [{"name": "...", "email": "...", "profile_url": "..."}, ...]
     """
     collected = []
-    seen_urls = set()  # Track URLs we've already processed to avoid duplicates across pages
+    seen_urls = set()
     page = 1
+    search_radius = None  # None = default radius (therapie.de decides, ~10km)
 
     print(f"Searching for {target_count} therapists in {zip_code}...")
-    print(f"Filters: insurance_type={insurance_type}, availability={availability}")
     print(f"Rate limit: {delay_seconds}s between requests\n")
 
     while len(collected) < target_count and page <= max_pages:
         print(f"Page {page}: Fetching search results...")
-        profile_urls = scrape_search_results(zip_code, insurance_type, availability, page)
+        profile_urls = scrape_search_results(
+            zip_code,
+            page=page,
+            search_radius=search_radius,
+            insurance_type=insurance_type,
+            availability=availability,
+            language=language,
+            therapy_type=therapy_type,
+            focus=focus,
+            gender=gender,
+        )
+
+        # Detect when we've exhausted results — all remaining are duplicates or nothing returned
+        new_urls = [u for u in profile_urls if u not in seen_urls]
 
         if not profile_urls:
-            print(f"No more results found on page {page}. Stopping.")
-            break
+            # Server returned nothing — truly exhausted this radius
+            if search_radius is None:
+                print(f"\nNo more results in default radius. Expanding search to 25km...\n")
+                search_radius = 25
+                page = 1
+                continue
+            else:
+                print(f"No more results found. Stopping.")
+                break
 
-        print(f"Found {len(profile_urls)} profiles on page {page}")
+        print(f"Found {len(new_urls)} new profiles on page {page}")
 
-        for i, profile_url in enumerate(profile_urls, 1):
+        for i, profile_url in enumerate(new_urls, 1):
             if len(collected) >= target_count:
                 break
 
-            # Skip if we've already processed this URL
-            if profile_url in seen_urls:
-                print(f"  [{i}/{len(profile_urls)}] Skipping duplicate profile")
-                continue
-
             seen_urls.add(profile_url)
 
-            print(f"  [{i}/{len(profile_urls)}] Checking profile...")
+            print(f"  [{i}/{len(new_urls)}] Checking profile...")
             time.sleep(delay_seconds)
 
             therapist_info = get_therapist_profile(profile_url)

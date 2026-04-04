@@ -1,0 +1,17 @@
+Field,Your data,Notes
+Name,Max Mustermann,Your full name. Used to sign the emails.
+City,Berlin,Your city name. Appears in the email body.
+Zip code,12345,Your postal code. Used to search for nearby therapists.
+Insurance type,public,"Accepted values: 'gesetzlich' or 'public' for public insurance; 'privat' or 'private' for private insurance."
+Insurance company,TK (Techniker Krankenkasse),The name of your health insurance provider.
+Symptoms,Depression and anxiety,Brief description of your symptoms. This appears in the email body.
+Previous diagnosis,"Generalized Anxiety Disorder, ADHD",Optional. Your diagnosis code if you have one. Leave blank if not applicable.
+Your email,max.mustermann@gmail.com,Optional. Used in the protocol document only — not sent automatically.
+Number of therapists,20,How many therapists to contact. 20-30 is recommended for Kostenerstattung.
+Email language,German,"Language for the outreach emails. Accepted values: 'German' or 'English' (case insensitive). Leave blank to default to German."
+Availability,available now,"Optional. Options: 'available now', 'up to 3 months', 'over 3 months', 'over 12 months'. Leave blank for no filter."
+Insurance filter,,"Optional. Options: 'public' (GKV), 'private' (PKV), 'kostenerstattung', 'self-pay'. Leave blank for no filter."
+Foreign therapy language,,"Optional. Only needed if you want therapy in a language other than German. Examples: 'English', 'Persian', 'Turkish', 'Russian'. See docs/therapie_de_filter_params.md for all options."
+Therapy format,,"Optional. Options: 'individual', 'group', 'family', 'couples', 'children'. Leave blank for no filter."
+Focus / topic,,"Optional. The main topic you want to work on. Examples: 'depression', 'anxiety', 'trauma', 'ADHD', 'burnout'. See docs/therapie_de_filter_params.md for all options."
+Therapist gender,,"Optional. Options: 'female', 'male', 'non-binary'. Leave blank for no preference."

@@ -82,7 +82,7 @@ python src/scraper.py --city Berlin --insurance gesetzlich --free-slots
    - [ ] Generate one email per therapist
 
 3. **User info collection**
-   - [ ] Create `meine_daten.csv` template (3 columns: Field, Your data, Notes)
+   - [ ] Create `my_data.csv` template (3 columns: Field, Your data, Notes)
    - [ ] Read user data from .csv using built-in `csv` module
    - [ ] Document required fields
    - [ ] Add validation for required fields

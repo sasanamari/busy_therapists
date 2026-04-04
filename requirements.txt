@@ -7,8 +7,10 @@ lxml>=4.9.0
 # selenium>=4.15.0
 # webdriver-manager>=4.0.0
 
-# Phase 5: Email sending (TBD - uncomment when decided)
-# secure-smtplib  # or other email library
+# Phase 5: Email sending (optional, fallback approach)
+# Email delivery currently uses mailto: links (no dependencies needed)
+# If batch SMTP sending is added later, uncomment:
+# secure-smtplib
 
 # Development tools (optional)
 # pytest>=7.4.0

@@ -42,6 +42,7 @@ env/
 
 # Project-specific
 data/
+output/
 user_config.json
 *.log
 
@@ -49,3 +50,4 @@ user_config.json
 credentials.json
 .env
 old_files/
+my_data.csv
