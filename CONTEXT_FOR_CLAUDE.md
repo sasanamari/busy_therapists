@@ -245,6 +245,18 @@ busy_therapists/
 
 **Current status (2026-04-04)**: MVP complete and tested end-to-end. All phases 1–3 done and committed.
 
+**README work in progress (2026-04-04)**: Working on Phase 4 (documentation). A user guide draft has been written collaboratively and saved to `GUIDE_DRAFT.md`. The guide covers the full Kostenerstattung process step by step, written for someone with mental health challenges. **Next session: user will review `GUIDE_DRAFT.md`, give feedback, then it gets integrated into `README.md` in the appropriate place. The README itself still needs to be fully rewritten** (current README is outdated — wrong feature list, wrong status, stale). Legal basis section intentionally omitted from README per user preference.
+
+---
+
+## 🐛 Known Issues / To Fix
+
+- **Kostenerstattung filter exists but undocumented**: `Insurance filter: kostenerstattung` is already implemented (maps to ID 6 in INSURANCE_MAP). The README/user guide should mention this as the recommended filter when searching for private therapists willing to work with reimbursement. therapie.de's data for this filter may not be fully up to date, so users should still confirm with the therapist directly.
+
+- **Insurance type not wired to scraper**: `my_data.csv` has an `Insurance type` field (public/private) used in emails, but it does NOT automatically set the scraper's insurance filter. The scraper uses the separate `Insurance filter` field. A user with private insurance who sets `Insurance type: private` won't automatically get private therapist results — they'd also need to set `Insurance filter: private`. These two fields should either be merged or `Insurance type` should auto-set the scraper filter. Raised during README writing (2026-04-04).
+
+---
+
 **Next steps (in order):**
 
 ### 1. Phase 4: Documentation
@@ -257,18 +269,25 @@ busy_therapists/
 
 ### 2. Phase 2b: Additional Email Templates
 
-We need 6 templates in total. Template 1 already exists. The remaining 5 need to be built.
+We need 8 templates in total. Template 1 already exists. The remaining 7 need to be built.
 
 **Overview of all templates:**
 
 | # | File | Purpose | Recipient |
 |---|---|---|---|
 | 1 | `therapy_request.txt` / `_en.txt` | ✅ Exists — general therapy inquiry | Any therapist (public or private) |
-| 2 | `probationary_request.txt` | Ask for Probatorische Sitzungen (1-2 eval sessions) | A therapist willing to do the evaluation |
-| 3 | `kassenzulassung_contact.txt` | Ask public (Kassenzulassung) therapists for availability — for documentation purposes | Public therapists |
+| 2 | `probationary_request.txt` | Ask for Probatorische Sitzungen (1-2 eval sessions) | A Kassenzulassung therapist |
+| 3 | `kassenzulassung_contact.txt` | Ask public therapists for availability — for documentation purposes | Public therapists |
 | 4 | `insurance_application.txt` | Formal Kostenerstattung application letter | Health insurance company (Krankenkasse) |
-| 5 | `private_therapist_inquiry.txt` | Ask private therapist: can they start soon + do they have Fachkunde in a Richtlinienverfahren? | Private practice therapists |
-| 6 | `widerspruch.txt` | Formal appeal / Widerspruch after insurance rejection | Health insurance company |
+| 5 | `private_therapist_inquiry.txt` | Ask private therapist: can they start soon + Fachkunde in Richtlinienverfahren + willing to do Kostenerstattung paperwork? | Private practice therapists |
+| 6 | `widerspruch_rejection.txt` | Formal Widerspruch after insurance **rejects** the application | Health insurance company |
+| 7 | `insurance_followup.txt` | Polite follow-up after ~4 weeks of no response — asking for status update | Health insurance company |
+| 8 | `widerspruch_ignored.txt` | Legal threat after being ignored even after template 7 (~5 weeks total silence) | Health insurance company |
+
+**Notes on templates 6-8:**
+- Template 6 = rejection scenario (Widerspruch — already planned, BPtK wording exists)
+- Template 7 = no response after ~4 weeks → polite status enquiry before escalating
+- Template 8 = still no response after ~5 weeks (1 week after template 7) → legal threat (different tone/wording from template 6, as this is about being ignored rather than a formal rejection)
 
 **Templates provided verbatim in the BPtK PDF (use these as the basis):**
 
