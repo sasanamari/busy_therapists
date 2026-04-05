@@ -9,7 +9,7 @@ About me:
 - Insurance: {insurance_type} with {insurance_company}
 - City: {patient_city}
 
-I am suffering from {symptoms}{previous_diagnosis} and would like to start therapy soon.
+I am suffering from {symptoms}{diagnosis_sentence} and would like to start therapy soon.
 
 Do you currently have available therapy places or can you put me on a waiting list? If yes, when could therapy begin?
 

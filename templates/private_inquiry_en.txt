@@ -1,0 +1,25 @@
+Subject: Inquiry Regarding Cost Reimbursement / Private Practice
+
+Dear {therapist_title} {therapist_name},
+
+I am looking for a therapist in private practice. I have been unable to find a publicly funded therapy place and would like to apply for cost reimbursement (Kostenerstattungsverfahren) under § 13 Abs. 3 SGB V.
+
+About me:
+- Name: {patient_name}
+- City: {patient_city}
+- Insurance: {insurance_type} with {insurance_company}
+
+I am struggling with {symptoms}{diagnosis_sentence}.
+
+For the reimbursement process, I have three questions:
+
+1. Do you have qualifications in an approved therapy method (Richtlinienverfahren) — that is, behavioural therapy (Verhaltenstherapie), depth psychology (Tiefenpsychologisch fundierte Psychotherapie), or psychoanalysis (Analytische Psychotherapie)?
+2. Would it be possible to begin treatment in the near future?
+3. Are you willing to support the cost reimbursement process and provide the necessary documentation?
+
+{therapy_language_question}
+
+If you can answer yes to all three, I would very much appreciate a written confirmation and an initial appointment to see if we are a good fit.
+
+Best regards,
+{patient_name}

@@ -70,18 +70,17 @@ def generate_email(therapist: Dict[str, str], user_config: Dict[str, str], templ
         **user_config
     }
 
-    # Handle optional previous_diagnosis field
-    # If user provided a diagnosis, format it properly for the template
-    # The template already has the symptom text, so we just add diagnosis after
-    if placeholders.get("previous_diagnosis"):
-        # Detect language from template content (simple heuristic)
+    # Build diagnosis_sentence from the raw previous_diagnosis input.
+    # Templates use {diagnosis_sentence} — never the raw {previous_diagnosis} directly.
+    raw_diagnosis = placeholders.get("previous_diagnosis", "")
+    if raw_diagnosis:
         is_english = "Subject:" in template or "Dear" in template
         if is_english:
-            placeholders["previous_diagnosis"] = f". I have been previously diagnosed with: {placeholders['previous_diagnosis']}"
+            placeholders["diagnosis_sentence"] = f". I have been previously diagnosed with: {raw_diagnosis}"
         else:
-            placeholders["previous_diagnosis"] = f". Ich habe bereits die Diagnose: {placeholders['previous_diagnosis']}"
+            placeholders["diagnosis_sentence"] = f". Ich habe bereits die Diagnose: {raw_diagnosis}"
     else:
-        placeholders["previous_diagnosis"] = ""
+        placeholders["diagnosis_sentence"] = ""
 
     # Fill template
     filled = template

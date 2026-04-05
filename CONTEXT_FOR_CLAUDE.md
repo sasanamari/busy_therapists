@@ -253,6 +253,17 @@ busy_therapists/
 
 - **Kostenerstattung filter exists but undocumented**: `Insurance filter: kostenerstattung` is already implemented (maps to ID 6 in INSURANCE_MAP). The README/user guide should mention this as the recommended filter when searching for private therapists willing to work with reimbursement. therapie.de's data for this filter may not be fully up to date, so users should still confirm with the therapist directly.
 
+- **my_data.csv needs new optional fields** for templates 5–8 (insurance emails). Add these fields with empty defaults so they stay as visible placeholders if not filled in:
+  - `Insurance number` — Versichertennummer (used in all insurance emails)
+  - `Private therapist name` — name of the private therapist found (templates 5, 7, 8)
+  - `Private therapist email` — email address of private therapist (template 4 sending)
+  - `Insurance email` — email address of the Krankenkasse (templates 5, 6, 7, 8)
+  - `Application date` — date the Kostenerstattung application was sent (templates 6, 8)
+  - `Follow-up date` — date the follow-up email was sent (template 8)
+  - `Rejection date` — date of the rejection letter (template 7)
+  - `Max wait months` — longest wait time found among public therapists (template 5)
+  All fields optional. If empty, placeholder stays visible in the email so user fills it in manually.
+
 - **Insurance type not wired to scraper**: `my_data.csv` has an `Insurance type` field (public/private) used in emails, but it does NOT automatically set the scraper's insurance filter. The scraper uses the separate `Insurance filter` field. A user with private insurance who sets `Insurance type: private` won't automatically get private therapist results — they'd also need to set `Insurance filter: private`. These two fields should either be merged or `Insurance type` should auto-set the scraper filter. Raised during README writing (2026-04-04).
 
 ---

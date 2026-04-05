@@ -1,0 +1,23 @@
+Betreff: Anfrage Kostenerstattungsverfahren / Privatpraxis
+
+Sehr geehrte/r {therapist_title} {therapist_name},
+
+ich bin auf der Suche nach einer Psychotherapeutin oder einem Psychotherapeuten in Privatpraxis. Ich konnte bislang keinen freien Kassentherapieplatz finden und möchte daher das Kostenerstattungsverfahren nach § 13 Abs. 3 SGB V beantragen.
+
+Zu meiner Person:
+- Name: {patient_name}
+- Wohnort: {patient_city}
+- Versicherung: {insurance_type} versichert bei {insurance_company}
+
+Ich leide unter {symptoms}{diagnosis_sentence}.
+
+Für das Kostenerstattungsverfahren habe ich drei Fragen:
+
+1. Verfügen Sie über die Fachkunde in einem Richtlinienverfahren (Verhaltenstherapie, tiefenpsychologisch fundierte Psychotherapie oder Analytische Psychotherapie)?
+2. Wäre es möglich, kurzfristig mit einer Behandlung zu beginnen?
+3. Sind Sie bereit, das Kostenerstattungsverfahren zu begleiten und die erforderlichen Unterlagen auszustellen?
+
+Falls Sie alle drei Fragen mit Ja beantworten können, würde ich mich über eine schriftliche Bestätigung und einen ersten Gesprächstermin sehr freuen.
+
+Mit freundlichen Grüßen
+{patient_name}

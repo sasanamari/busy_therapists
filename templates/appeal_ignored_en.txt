@@ -1,0 +1,31 @@
+Betreff: Untätigkeit: Antrag auf Kostenerstattung vom {application_date} – {patient_name} – Vers.-Nr.: {insurance_number}
+
+Sehr geehrte Damen und Herren,
+
+am {application_date} habe ich einen Antrag auf Kostenerstattung nach § 13 Abs. 3 SGB V eingereicht. Am {followup_date} habe ich nachgefragt, da ich keine Rückmeldung erhalten hatte. Bis heute ist keine Antwort erfolgt.
+
+Gemäß § 2 Abs. 1 SGB V sind Sie verpflichtet, mir eine rechtzeitige Versorgung zu gewährleisten. Ihr Schweigen auf meinen Antrag nach § 13 Abs. 3 SGB V ist mit dieser Pflicht nicht vereinbar.
+
+Ich fordere Sie hiermit auf, meinen Antrag unverzüglich zu bearbeiten und mir eine schriftliche Entscheidung zukommen zu lassen. Sollte ich innerhalb von zwei Wochen keine Rückmeldung erhalten, werde ich meinen Anspruch gerichtlich durchsetzen und die Aufsichtsbehörde sowie den Patientenbeauftragten der Bundesregierung informieren.
+
+Mit freundlichen Grüßen
+{patient_name}
+Versichertennummer: {insurance_number}
+
+---
+[English translation / Englische Übersetzung]
+---
+
+Subject: No Response: Cost Reimbursement Application dated {application_date} – {patient_name} – Insurance No.: {insurance_number}
+
+Dear Sir or Madam,
+
+On {application_date} I submitted an application for cost reimbursement under § 13 Abs. 3 SGB V. On {followup_date} I sent a follow-up, as I had received no response. To date, I have still not heard from you.
+
+Under § 2 Abs. 1 SGB V, you are legally obligated to ensure I receive timely care. Your failure to respond to my application under § 13 Abs. 3 SGB V is incompatible with this obligation.
+
+I hereby demand that you process my application without delay and provide me with a written decision. If I do not receive a response within two weeks, I will pursue my claim through legal channels and notify the supervisory authority (Aufsichtsbehörde) as well as the Federal Patient Commissioner (Patientenbeauftragter der Bundesregierung).
+
+Kind regards,
+{patient_name}
+Insurance number: {insurance_number}

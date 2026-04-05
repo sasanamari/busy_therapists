@@ -1,0 +1,19 @@
+Betreff: Anfrage: Probatorische Sitzungen / Kostenerstattungsverfahren
+
+Sehr geehrte/r {therapist_title} {therapist_name},
+
+ich bin auf der Suche nach einem Therapieplatz und möchte das Kostenerstattungsverfahren nach § 13 Abs. 3 SGB V beantragen. Hierfür benötige ich probatorische Sitzungen sowie das ausgefüllte PTV11-Formular mit Dringlichkeitsvermerk.
+
+Zu meiner Person:
+- Name: {patient_name}
+- Versicherung: {insurance_type} versichert bei {insurance_company}
+- Wohnort: {patient_city}
+
+Ich leide unter {symptoms}{diagnosis_sentence}. Ich bin dringend auf Unterstützung angewiesen.
+
+Wären Sie bereit, probatorische Sitzungen (1–3 Sitzungen) mit mir durchzuführen und im Anschluss das PTV11-Formular mit Dringlichkeitsvermerk auszustellen? Ich würde mich außerdem freuen, wenn Sie mir sagen könnten, ob ich vor Beginn des Verfahrens eine Terminvermittlung über die 116 117 in Anspruch nehmen sollte.
+
+Für eine Rückmeldung bin ich sehr dankbar.
+
+Mit freundlichen Grüßen
+{patient_name}

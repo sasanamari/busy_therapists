@@ -1,0 +1,11 @@
+Betreff: Widerspruch gegen Ablehnungsbescheid vom {rejection_date} – {patient_name} – Vers.-Nr.: {insurance_number}
+
+Sehr geehrte Damen und Herren,
+
+hiermit lege ich Widerspruch gegen Ihr Schreiben vom {rejection_date} ein, mit dem Sie es ablehnen, die Kosten, die mir durch die ambulante Psychotherapie bei {private_therapist_name} entstehen, zu übernehmen. Meinem Antrag lagen die erforderlichen Unterlagen bei, aus denen hervorgeht, dass die Anspruchsvoraussetzungen vorliegen. Gemäß § 2 Abs. 1 SGB V sind Sie verpflichtet, mir eine rechtzeitige Versorgung zu gewährleisten. Da dies nicht erfolgt ist, besteht mein Anspruch auf Kostenerstattung nach § 13 Abs. 3 SGB V.
+
+Ich bitte Sie deshalb erneut, meinen Antrag zu genehmigen. Sollten Sie dem Antrag nicht stattgeben, werde ich meinen Anspruch gerichtlich durchsetzen und die Aufsichtsbehörde sowie den Patientenbeauftragten der Bundesregierung informieren.
+
+Mit freundlichen Grüßen
+{patient_name}
+Versichertennummer: {insurance_number}

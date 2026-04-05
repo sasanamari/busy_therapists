@@ -1,0 +1,21 @@
+Betreff: Antrag auf Kostenerstattung nach § 13 Abs. 3 SGB V – {patient_name} – Vers.-Nr.: {insurance_number}
+
+Sehr geehrte Damen und Herren,
+
+hiermit beantrage ich, dass Sie die Kosten, die mir durch die ambulante Psychotherapie bei {private_therapist_name} entstehen, übernehmen und mir dies zusichern. {private_therapist_name} ist ein approbierter Psychotherapeut/eine approbierte Psychotherapeutin in einem Richtlinienverfahren, verfügt aber nicht über eine Zulassung zur gesetzlichen Krankenversicherung.
+
+Gemäß § 2 Abs. 1 SGB V sind gesetzliche Krankenkassen verpflichtet, ihren Versicherten eine rechtzeitige und ausreichende Versorgung zu gewährleisten. Wie die beigefügten Unterlagen belegen, ist es mir trotz ernsthafter Bemühungen nicht gelungen, einen Psychotherapeuten mit Kassenzulassung zu finden, der mich innerhalb von drei Monaten behandeln kann. Ich mache daher von meinem Recht nach § 13 Abs. 3 SGB V Gebrauch, mir die notwendige Leistung selbst zu beschaffen und die Kosten erstatten zu lassen.
+
+Wie Sie meiner beigelegten Kontaktliste entnehmen können, habe ich mich mehrfach vergeblich bemüht, einen Psychotherapeuten mit Kassenzulassung zu finden, der mich rechtzeitig behandeln kann. Meine Suche ergab, dass ich mehr als {max_wait_months} Monate auf einen ersten Termin warten müsste. Dagegen besteht die Möglichkeit, dass ich bei {private_therapist_name} kurzfristig mit einer Behandlung beginnen könnte.
+
+Ich füge diesem Antrag folgende Unterlagen bei:
+- Kontaktliste der kontaktierten Psychotherapeuten mit Kassenzulassung
+- PTV11-Formular mit Dringlichkeitsvermerk
+- Bescheinigung von {private_therapist_name} über Fachkunde und kurzfristige Verfügbarkeit
+- Ärztliche Notwendigkeitsbescheinigung / Konsiliarbericht
+
+Falls Sie meinem Antrag nicht zustimmen, nennen Sie mir bitte – so schnell wie möglich – einen zugelassenen Psychotherapeuten in der Nähe meines Wohnortes, bei dem ich kurzfristig einen Termin erhalte.
+
+Mit freundlichen Grüßen
+{patient_name}
+Versichertennummer: {insurance_number}

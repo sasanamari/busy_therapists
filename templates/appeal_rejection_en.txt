@@ -1,0 +1,27 @@
+Betreff: Widerspruch gegen Ablehnungsbescheid vom {rejection_date} – {patient_name} – Vers.-Nr.: {insurance_number}
+
+Sehr geehrte Damen und Herren,
+
+hiermit lege ich Widerspruch gegen Ihr Schreiben vom {rejection_date} ein, mit dem Sie es ablehnen, die Kosten, die mir durch die ambulante Psychotherapie bei {private_therapist_name} entstehen, zu übernehmen. Meinem Antrag lagen die erforderlichen Unterlagen bei, aus denen hervorgeht, dass die Anspruchsvoraussetzungen vorliegen. Gemäß § 2 Abs. 1 SGB V sind Sie verpflichtet, mir eine rechtzeitige Versorgung zu gewährleisten. Da dies nicht erfolgt ist, besteht mein Anspruch auf Kostenerstattung nach § 13 Abs. 3 SGB V.
+
+Ich bitte Sie deshalb erneut, meinen Antrag zu genehmigen. Sollten Sie dem Antrag nicht stattgeben, werde ich meinen Anspruch gerichtlich durchsetzen und die Aufsichtsbehörde sowie den Patientenbeauftragten der Bundesregierung informieren.
+
+Mit freundlichen Grüßen
+{patient_name}
+Versichertennummer: {insurance_number}
+
+---
+[English translation / Englische Übersetzung]
+---
+
+Subject: Formal Appeal against Rejection dated {rejection_date} – {patient_name} – Insurance No.: {insurance_number}
+
+Dear Sir or Madam,
+
+I hereby lodge a formal appeal (Widerspruch) against your letter dated {rejection_date}, in which you declined to cover the costs arising from outpatient psychotherapy with {private_therapist_name}. My application included all required documents demonstrating that the conditions for reimbursement are met. Under § 2 Abs. 1 SGB V, you are legally obligated to ensure I receive timely care. As you have failed to do so, my entitlement to reimbursement under § 13 Abs. 3 SGB V stands.
+
+I therefore ask you once again to approve my application. Should you not do so, I will pursue my claim through legal channels and notify the supervisory authority (Aufsichtsbehörde) as well as the Federal Patient Commissioner (Patientenbeauftragter der Bundesregierung).
+
+Kind regards,
+{patient_name}
+Insurance number: {insurance_number}

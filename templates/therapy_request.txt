@@ -9,7 +9,7 @@ Zu meiner Person:
 - Versicherung: {insurance_type} versichert bei {insurance_company}
 - Wohnort: {patient_city}
 
-Ich leide unter {symptoms}{previous_diagnosis} und würde gerne zeitnah mit einer Therapie beginnen.
+Ich leide unter {symptoms}{diagnosis_sentence} und würde gerne zeitnah mit einer Therapie beginnen.
 
 Haben Sie aktuell freie Therapieplätze oder können Sie mich auf eine Warteliste setzen? Falls ja, wann wäre mit einem Therapiebeginn zu rechnen?
 

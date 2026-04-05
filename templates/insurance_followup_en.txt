@@ -1,0 +1,27 @@
+Betreff: Nachfrage: Antrag auf Kostenerstattung vom {application_date} – {patient_name} – Vers.-Nr.: {insurance_number}
+
+Sehr geehrte Damen und Herren,
+
+am {application_date} habe ich einen Antrag auf Kostenerstattung nach § 13 Abs. 3 SGB V eingereicht. Bisher habe ich keine Rückmeldung von Ihnen erhalten.
+
+Ich bitte Sie, mir den aktuellen Bearbeitungsstand mitzuteilen und meinen Antrag zeitnah zu bearbeiten. Eine rechtzeitige psychotherapeutische Behandlung ist für mich dringend notwendig.
+
+Mit freundlichen Grüßen
+{patient_name}
+Versichertennummer: {insurance_number}
+
+---
+[English translation / Englische Übersetzung]
+---
+
+Subject: Follow-up: Cost Reimbursement Application dated {application_date} – {patient_name} – Insurance No.: {insurance_number}
+
+Dear Sir or Madam,
+
+On {application_date} I submitted an application for cost reimbursement under § 13 Abs. 3 SGB V. I have not yet received any response from you.
+
+I kindly ask you to inform me of the current status of my application and to process it without further delay. Timely access to psychotherapy is urgently necessary for me.
+
+Kind regards,
+{patient_name}
+Insurance number: {insurance_number}
