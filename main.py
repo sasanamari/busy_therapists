@@ -2,8 +2,7 @@
 main.py - Entry point for busy_therapists
 
 Usage:
-    python main.py              — scrape therapists and generate emails
-    python main.py --protocol  — generate Kostenerstattung protocol from responses.csv
+    python main.py  — scrape therapists and generate emails
 
 Reads my_data.csv, scrapes therapists from therapie.de, generates
 personalized emails, saves output to output/, and opens emails.html in
@@ -23,7 +22,6 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from scraper import collect_therapists, save_therapists_to_json
 from email_generator import generate_emails_for_therapists, save_emails_to_json
-from protocol_generator import generate_protocol
 
 
 EXAMPLE_ZIP = "12345"
@@ -241,17 +239,29 @@ def save_email_files(emails: list, output_dir: Path) -> None:
 
 def save_response_tracking_csv(therapists: list, path: Path) -> None:
     """
-    Generate a CSV for the user to track therapist responses.
-    Pre-filled with therapist details; user fills in response columns manually.
-    Can be submitted to insurance as proof of contact.
+    Append new therapists to responses.csv, skipping any already present (by email).
+    Creates the file with a header if it doesn't exist yet.
+    The file is the contact log submitted to the insurance as proof of search.
     """
-    with open(path, "w", encoding="utf-8", newline="") as f:
+    header = ["Name", "Email", "Address", "Date contacted", "Response received (Yes/No)", "Response date", "Notes"]
+
+    # Load existing entries to avoid duplicates
+    existing_emails = set()
+    if path.exists():
+        with open(path, "r", encoding="utf-8", newline="") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                existing_emails.add(row.get("Email", "").strip().lower())
+
+    new_entries = [t for t in therapists if t["email"].strip().lower() not in existing_emails]
+
+    # Write header if file is new, then append new entries
+    write_header = not path.exists()
+    with open(path, "a", encoding="utf-8", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow([
-            "Name", "Email", "Address",
-            "Date contacted", "Response received (Yes/No)", "Response date", "Notes"
-        ])
-        for t in therapists:
+        if write_header:
+            writer.writerow(header)
+        for t in new_entries:
             writer.writerow([
                 t["name"],
                 t["email"],
@@ -262,7 +272,10 @@ def save_response_tracking_csv(therapists: list, path: Path) -> None:
                 "",  # Notes
             ])
 
-    print(f"Saved response tracking sheet → {path}")
+    if new_entries:
+        print(f"Added {len(new_entries)} new therapists to responses.csv → {path}")
+    else:
+        print(f"No new therapists to add to responses.csv (all already present)")
 
 
 # ---------------------------------------------------------------------------
@@ -399,7 +412,16 @@ def main():
     print(f"  Insurance: {config['insurance_type']} — {config['insurance_company']}")
     print(f"  Target:    {config['target_count']} therapists")
 
-    # --- 2. Scrape ---
+    # --- 2. Stale file warning ---
+    responses_path = output_dir / "responses.csv"
+    if responses_path.exists():
+        print("\n" + "=" * 50)
+        print("  HEADS UP: responses.csv already exists.")
+        print("  New therapists will be appended to it.")
+        print("  If this is a fresh start, delete output/responses.csv first.")
+        print("=" * 50)
+
+    # --- 3. Scrape ---
     print(f"\nSearching for therapists near {config['zip_code']}...")
     print("This will take a few minutes — please leave the window open.\n")
 
@@ -430,7 +452,7 @@ def main():
     save_therapists_to_json(therapists, str(data_dir / "therapists.json"))
     save_therapists_txt(therapists, output_dir / "therapists.txt")
 
-    # --- 3. Generate emails ---
+    # --- 4. Generate emails ---
     print(f"\nGenerating {len(therapists)} emails...")
 
     lang_label = config["therapy_language_label"]
@@ -459,11 +481,11 @@ def main():
     save_email_files(emails, emails_dir)
     save_response_tracking_csv(therapists, output_dir / "responses.csv")
 
-    # --- 4. HTML output ---
+    # --- 5. HTML output ---
     html_path = output_dir / "emails.html"
     generate_html(emails, html_path)
 
-    # --- 5. Open in browser ---
+    # --- 6. Open in browser ---
     print(f"\nOpening emails.html in your browser...")
     webbrowser.open(html_path.as_uri())
 
@@ -479,43 +501,5 @@ def main():
             print(f"  WARNING: {w}")
 
 
-def protocol_mode():
-    """Generate the Kostenerstattung protocol from a filled-in responses.csv."""
-    base_dir = Path(__file__).parent
-    csv_path = base_dir / "my_data.csv"
-    output_dir = base_dir / "output"
-
-    print("=" * 50)
-    print("Therapy Finder — Protocol Generator")
-    print("=" * 50)
-
-    if not csv_path.exists():
-        print("\nERROR: my_data.csv not found.")
-        sys.exit(1)
-
-    raw_config = read_config(csv_path)
-    errors, _ = validate_config(raw_config)
-    if errors:
-        for e in errors:
-            print(f"  ERROR: {e}")
-        sys.exit(1)
-
-    config = parse_config(raw_config)
-    responses_path = output_dir / "responses.csv"
-    protocol_path = output_dir / "protocol.txt"
-
-    print(f"\nReading responses from {responses_path}...")
-    try:
-        generate_protocol(config, responses_path, protocol_path)
-    except (FileNotFoundError, ValueError) as e:
-        print(f"\nERROR: {e}")
-        sys.exit(1)
-
-    print("\nDone! Submit output/protocol.txt with your Kostenerstattung application.")
-
-
 if __name__ == "__main__":
-    if "--protocol" in sys.argv:
-        protocol_mode()
-    else:
-        main()
+    main()

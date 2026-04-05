@@ -257,6 +257,32 @@ busy_therapists/
 
 ---
 
+## ✅ Decisions Made
+
+### main.py: Interactive menu (2026-04-05)
+`main.py` will be refactored to show an **interactive numbered menu** instead of CLI flags. This is required for PyInstaller compatibility (double-click executable) and better UX for non-technical users.
+
+**Design:**
+- User runs the program (or double-clicks executable) → sees a numbered menu
+- They type a number to select what they need today
+- Each option tells the user what they need to have ready (e.g. "Make sure my_data.csv is filled in", "Make sure responses.csv is filled in")
+- Technical users can still use flags (e.g. `--scrape`, `--protocol`) to skip the menu
+
+**Menu options (mapped to templates/modes):**
+1. Search for therapists + generate outreach emails (`therapy_request`) — needs: `my_data.csv`
+2. Request a probationary session (`probationary_request`) — needs: `my_data.csv`
+3. Contact public therapists for documentation (`kassenzulassung_contact`) — needs: `my_data.csv`
+4. Find a private therapist (`private_therapist_inquiry`) — needs: `my_data.csv`
+5. Generate reimbursement application letter (`insurance_application`) — needs: `my_data.csv` + private therapist details
+6. Generate contact protocol (`--protocol` mode) — needs: `responses.csv` filled in
+7. Follow up with insurance — no response (`insurance_followup`) — needs: `my_data.csv`
+8. Appeal a rejection (`widerspruch_rejection`) — needs: `my_data.csv` + rejection letter date
+9. Legal threat — being ignored (`widerspruch_ignored`) — needs: `my_data.csv`
+
+Options 2–4 use the scraper (same as option 1 but different templates). Options 5, 7, 8, 9 are one-off documents (no scraper needed).
+
+---
+
 **Next steps (in order):**
 
 ### 1. Phase 4: Documentation

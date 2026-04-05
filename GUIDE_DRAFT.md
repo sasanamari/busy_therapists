@@ -1,6 +1,7 @@
 # Finding a Therapist in Germany — Step by Step
 
-Getting therapy in Germany is genuinely hard, and the process can feel overwhelming — especially when you're already not doing well. This guide breaks it down into small, concrete steps.
+Finding a free spot for therapy in Germany is tricky, and it can be even more difficult if you have public health insurance or need therapy in a language other than German. This tool not only helps you find and email therapists in your area, it can also help you in a process that gives you access to more therapists through your public health insurace. If you can showcase that there are no therapists available to you within the next three months, you may demand that your public health insurance pays for a licensed therapist out of their network. This tool guides and helps you in the bureaucratic process.
+
 
 ---
 
@@ -24,10 +25,11 @@ This tool helps you with steps 2 and 3. The rest of this guide walks you through
 
 Use this tool to search for therapists near you who accept your insurance and have availability soon. You can filter by language, therapy method, gender, and more.
 
-- Fill in your details in `my_data.csv`
+- Copy `my_data.csv.example`, then rename the copy `my_data.csv`. Fill in your details in `my_data.csv`
+   - In case you're on a Windows computer and unfamiliar with csv files, you can open them with Excel for easier readability.
 - Set **Availability** to `available now` or `up to 3 months`
-- Run the tool and send the emails it generates
-- If a therapist replies and it feels like a good match — you're done
+- Run the tool and send the emails it generates either by clicking on the email link or copy and pasting the email content.
+- If a therapist replies and it feels like a good match — you're done. Congrats! 
 
 If this doesn't work out (long waiting lists, no replies), continue below.
 
@@ -39,15 +41,14 @@ This is the most important document for your reimbursement application. It comes
 
 **How to find someone:**
 - Run the tool with **Insurance filter** set to `public`, and no availability filter
-- Use the probationary session email template
-- Mention explicitly in your email that you need the PTV11 form with an urgency sticker for a Kostenerstattung application
+- Use the probationary session email template. It mentions explicitly in your email that you need the PTV11 form with an urgency sticker for a Kostenerstattung application
 
-The therapist will assess you and fill in the PTV11 with a pre-diagnosis, recommended therapy method, and an urgency sticker. **Hold on to this form — you'll need it for your insurance application.**
+The therapist will assess you and fill in the PTV11 with a pre-diagnosis, and an urgency sticker. **Hold on to this form — you'll need it for your insurance application.**
 
 **Ask the therapist:**
-- Whether you also need to contact **116 117** (available by phone, app, or website) to get a referral number — some insurers require it, some don't. The therapist will know.
+- Whether you also need to contact **116 117** (available by phone, app, or website) to get a referral number — some insurers require it, some don't. The therapist should know.
 
-> **On 116 117 referrals:** A referral creates a useful paper trail. The downside is you lose control over which therapist you're assigned to. You might be sent to a German-only therapist or a group therapy session.
+> **On 116 117 referrals:** A referral creates a useful paper trail. The downside is you might lose control over which therapist you're assigned to in the initial assessment. You might be sent to a German-only therapist or a group therapy session.
 >
 > - **Language:** Frustratingly, not speaking German isn't a legally accepted reason to turn down a therapist. However, if you show up and the therapist cannot provide adequate care in your language, they can decline to treat you — which is a valid outcome. Bring a short written note in German explaining the situation if needed.
 > - **Group therapy:** If you're assigned to group therapy and your symptoms make it genuinely unsuitable (for example, social anxiety that prevents you from participating), you can decline on the grounds that it is not compatible with your clinical needs.
@@ -69,8 +70,9 @@ You don't need to filter by language, gender, or therapy method — legally, ava
 - Track all responses in the `responses.csv` file the tool generates: dates, replies, waiting times
 - No reply is also valid, but give it 1–2 weeks before counting it
 - Contact a few extra upfront if you'd rather not wait on stragglers
+- If you already kept a log from therapists that turned you down in step 1, you may add them to `responses.csv`
 
-When you're ready to apply, run `python main.py --protocol` to generate a formatted contact protocol from your responses table.
+The tool automatically keeps `responses.csv` up to date as you run it. When you're ready to apply, attach it to your insurance application email.
 
 ---
 
@@ -86,7 +88,7 @@ Start looking for a private therapist you actually want to work with. They need 
 2. **Willing to handle the Kostenerstattung paperwork** — not all private therapists are, so ask explicitly
 
 **How to search:**
-- Set **Insurance filter** to `kostenerstattung` in `my_data.csv` — therapie.de has a filter for this (not always up to date, but a good starting point)
+- Set **Insurance filter** to `kostenerstattung` in `my_data.csv` — therapie.de has a filter for this (not always up to date, but a good starting point). If you don't find a good therapist, you may also reach out to therapists who work with private health insurance and ask them in your email whether they are willing to work with `kostenerstattung`.
 - Use the private therapist inquiry email template, which covers both criteria above
 
 Once you've found someone promising, see them for 1–2 sessions to make sure it feels right. Note: these initial sessions may or may not be reimbursed later — you may need to pay for them out of pocket for now.
@@ -101,7 +103,7 @@ Ask your GP (or psychiatrist, if you're already seeing one) for:
 - A **medical certificate of necessity** (Ärztliche Notwendigkeitsbescheinigung)
 - A **consultation report** (Konsiliarbericht)
 
-This is straightforward — tell them you've been struggling (depression, anxiety, difficulty functioning at work, school, or in daily life) and need documentation to support a therapy application. Bring any forms your private therapist gave you. Don't stress about this appointment — it's mostly filling out forms, not a deep medical examination.
+This is straightforward — tell them you've been struggling (depression, anxiety etc which has caused difficulty functioning at work, school, or in daily life) and need documentation to support a therapy application. Bring any forms your private therapist gave you. Don't stress about this appointment — it's mostly filling out forms, not a deep medical examination.
 
 ---
 
