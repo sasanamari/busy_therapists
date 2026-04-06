@@ -7,7 +7,7 @@ ich bin auf der Suche nach einer Psychotherapeutin oder einem Psychotherapeuten 
 Zu meiner Person:
 - Name: {patient_name}
 - Wohnort: {patient_city}
-- Versicherung: {insurance_type} versichert bei {insurance_company}
+- Versicherung: gesetzlich versichert bei {insurance_company}
 
 Ich leide unter {symptoms}{diagnosis_sentence}.
 

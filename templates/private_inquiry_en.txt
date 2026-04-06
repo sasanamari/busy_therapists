@@ -7,7 +7,7 @@ I am looking for a therapist in private practice. I have been unable to find a p
 About me:
 - Name: {patient_name}
 - City: {patient_city}
-- Insurance: {insurance_type} with {insurance_company}
+- Insurance: statutory insurance (gesetzlich versichert) with {insurance_company}
 
 I am struggling with {symptoms}{diagnosis_sentence}.
 
