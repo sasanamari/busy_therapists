@@ -6,7 +6,7 @@ hiermit beantrage ich, dass Sie die Kosten, die mir durch die ambulante Psychoth
 
 Gemäß § 2 Abs. 1 SGB V sind gesetzliche Krankenkassen verpflichtet, ihren Versicherten eine rechtzeitige und ausreichende Versorgung zu gewährleisten. Wie die beigefügten Unterlagen belegen, ist es mir trotz ernsthafter Bemühungen nicht gelungen, einen Psychotherapeuten mit Kassenzulassung zu finden, der mich innerhalb von drei Monaten behandeln kann. Ich mache daher von meinem Recht nach § 13 Abs. 3 SGB V Gebrauch, mir die notwendige Leistung selbst zu beschaffen und die Kosten erstatten zu lassen.
 
-Wie Sie meiner beigelegten Kontaktliste entnehmen können, habe ich mich mehrfach vergeblich bemüht, einen Psychotherapeuten mit Kassenzulassung zu finden, der mich rechtzeitig behandeln kann. Meine Suche ergab, dass ich mehr als {max_wait_months} Monate auf einen ersten Termin warten müsste. Dagegen besteht die Möglichkeit, dass ich bei {private_therapist_name} kurzfristig mit einer Behandlung beginnen könnte.
+Wie Sie meiner beigelegten Kontaktliste entnehmen können, habe ich mich mehrfach vergeblich bemüht, einen Psychotherapeuten mit Kassenzulassung zu finden, der mich rechtzeitig behandeln kann. Meine Suche ergab, dass ich mehr als 3 Monate auf einen ersten Termin warten müsste. Dagegen besteht die Möglichkeit, dass ich bei {private_therapist_name} kurzfristig mit einer Behandlung beginnen könnte.
 
 Ich füge diesem Antrag folgende Unterlagen bei:
 - Kontaktliste der kontaktierten Psychotherapeuten mit Kassenzulassung
@@ -32,12 +32,12 @@ I hereby request that you cover the costs arising from outpatient psychotherapy 
 
 Under § 2 Abs. 1 SGB V, statutory health insurers are required to ensure their members receive timely and adequate care. As the enclosed documents demonstrate, despite genuine efforts I have been unable to find a publicly funded therapist who can begin treating me within three months. I am therefore exercising my right under § 13 Abs. 3 SGB V to obtain the necessary treatment myself and claim reimbursement of the costs.
 
-As you can see from my attached contact list, I have made repeated unsuccessful attempts to find a publicly funded therapist (Kassenzulassung) who could treat me in a timely manner. My search showed that I would have to wait more than {max_wait_months} months for a first appointment. In contrast, it would be possible to begin treatment with {private_therapist_name} in the near future.
+As you can see from my attached contact list, I have made repeated unsuccessful attempts to find a publicly funded therapist (Kassenzulassung) who could treat me in a timely manner. My search showed that I would have to wait more than 3 months for a first appointment. In contrast, it would be possible to begin treatment with {private_therapist_name} in the near future.
 
 I am enclosing the following documents with this application:
 - Contact list of publicly funded therapists approached
 - PTV11 form with urgency note
-- Confirmation from {private_therapist_name} of qualifications and availability
+- Confirmation from {private_therapist_name} ({private_therapist_email}) of qualifications and availability
 - Medical certificate of necessity / consultation report (Konsiliarbericht)
 
 If you do not approve my application, please inform me as soon as possible of a publicly funded therapist near my place of residence who can offer me an appointment in the near future.

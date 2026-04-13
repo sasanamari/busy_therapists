@@ -2,11 +2,9 @@
 main.py - Entry point for busy_therapists
 
 Usage:
-    python main.py  — scrape therapists and generate emails
+    python main.py  — shows interactive menu
 
-Reads my_data.csv, scrapes therapists from therapie.de, generates
-personalized emails, saves output to output/, and opens emails.html in
-the browser for manual sending.
+Reads my_data.csv, presents a numbered menu, and runs the selected step.
 """
 
 import csv
@@ -21,11 +19,14 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from scraper import collect_therapists, save_therapists_to_json
-from email_generator import generate_emails_for_therapists, save_emails_to_json
+from email_generator import generate_emails_for_therapists, save_emails_to_json, generate_insurance_email
 
 
 EXAMPLE_ZIP = "12345"
-REQUIRED_FIELDS = ["Zip code", "Insurance type", "Insurance company", "Symptoms"]
+REQUIRED_FIELDS = ["Zip code", "Your insurance", "Insurance company", "Symptoms"]
+
+# Sentinel — distinguishes "caller didn't pass an override" from "caller explicitly wants None (no filter)"
+_UNSET = object()
 
 # Maps human-readable CSV values to therapie.de numeric IDs
 LANGUAGE_MAP = {
@@ -135,14 +136,20 @@ def validate_config(config: dict) -> tuple[list, list]:
     except ValueError:
         errors.append("'Number of therapists' must be a whole number (e.g. 20).")
 
-    # Warn about unrecognised optional filter values so they don't silently do nothing
+    # Availability accepts "yes"/"no" (cascade shortcuts) in addition to specific values
+    avail_value = config.get("Availability", "").strip().lower()
+    if avail_value and avail_value not in AVAILABILITY_MAP and avail_value not in {"yes", "no"}:
+        warnings.append(
+            f"'Availability' value '{avail_value}' was not recognised — filter will be ignored. "
+            f"Valid options: 'yes', 'no', or a specific value. See docs/therapie_de_filter_params.md."
+        )
+
     optional_filters = [
-        ("Availability",            AVAILABILITY_MAP),
-        ("Insurance filter",        INSURANCE_MAP),
+        ("Therapist insurance",      INSURANCE_MAP),
         ("Foreign therapy language", LANGUAGE_MAP),
-        ("Therapy format",          THERAPY_TYPE_MAP),
-        ("Focus / topic",           FOCUS_MAP),
-        ("Therapist gender",        GENDER_MAP),
+        ("Therapy format",           THERAPY_TYPE_MAP),
+        ("Focus / topic",            FOCUS_MAP),
+        ("Therapist gender",         GENDER_MAP),
     ]
     for field, mapping in optional_filters:
         value = config.get(field, "").strip()
@@ -162,37 +169,87 @@ def _lookup(value: str, mapping: dict):
     return mapping.get(value.strip().lower())
 
 
+def _build_availability_stages(raw_value: str) -> list:
+    """
+    Convert the Availability CSV field to an ordered list of (availability_id, radius) stages.
+
+    The scraper works through stages in sequence — moving to the next only when
+    the current one is exhausted. This cascades from tighter to looser filters
+    so we always try to find the most relevant therapists first.
+
+    Each tuple is (availability_id, search_radius):
+      - availability_id: None = no filter, or a therapie.de terminzeitraum value
+      - search_radius:   None = therapie.de default (~10km), 25 = explicit 25km
+
+    "yes"  — want available therapists (personal search, option 1):
+             try available-now locally → up to 3 months locally →
+             available-now at 25km → up to 3 months at 25km
+    "no"   — want busy therapists (documentation search, option 3):
+             try over-12-months locally → over-3-months locally →
+             same two at 25km (radius matters less here, but included for completeness)
+    other  — a specific single value (e.g. "available now"); tries default
+             radius first then expands to 25km as fallback
+    blank  — no availability filter; tries default radius then 25km
+    """
+    v = raw_value.strip().lower() if raw_value else ""
+
+    if v == "yes":
+        # Cascade from strictest (available now, local) to most relaxed (3 months, 25km)
+        return [
+            (AVAILABILITY_MAP["available now"],  None),  # available now, local
+            (AVAILABILITY_MAP["up to 3 months"], None),  # up to 3 months, local
+            (AVAILABILITY_MAP["available now"],  25),    # available now, 25km
+            (AVAILABILITY_MAP["up to 3 months"], 25),    # up to 3 months, 25km
+        ]
+    elif v == "no":
+        # Cascade from longest waits first (most useful for documentation)
+        return [
+            (AVAILABILITY_MAP["over 12 months"], None),  # over 12 months, local
+            (AVAILABILITY_MAP["over 3 months"],  None),  # over 3 months, local
+            (AVAILABILITY_MAP["over 12 months"], 25),    # over 12 months, 25km
+            (AVAILABILITY_MAP["over 3 months"],  25),    # over 3 months, 25km
+        ]
+    else:
+        # Single specific value or blank — try default radius, expand to 25km if needed
+        availability_id = _lookup(v, AVAILABILITY_MAP)  # returns None if blank or unrecognised
+        return [(availability_id, None), (availability_id, 25)]
+
+
 def parse_config(config: dict) -> dict:
     """Map CSV field names to internal keys used by scraper and email generator."""
     return {
-        "patient_name":      config.get("Name", ""),
-        "patient_city":      config.get("City", ""),
-        "zip_code":          config.get("Zip code", ""),
-        "insurance_type":    config.get("Insurance type", ""),
-        "insurance_company": config.get("Insurance company", ""),
-        "symptoms":          config.get("Symptoms", ""),
-        "previous_diagnosis": config.get("Previous diagnosis", ""),
-        "sender_email":      config.get("Your email", ""),
-        "target_count":      int(config.get("Number of therapists", "20")),
-        "email_language":    "en" if config.get("Email language", "").strip().lower() == "english" else "de",
-        # Raw language label for email template (e.g. "English", "Persian")
+        "patient_name":           config.get("Name", ""),
+        "patient_city":           config.get("City", ""),
+        "zip_code":               config.get("Zip code", ""),
+        "insurance_type":         config.get("Your insurance", ""),
+        "insurance_company":      config.get("Insurance company", ""),
+        "symptoms":               config.get("Symptoms", ""),
+        "previous_diagnosis":     config.get("Previous diagnosis", ""),
+        "sender_email":           config.get("Your email", ""),
+        "target_count":           int(config.get("Number of therapists", "20")),
+        "email_language":         "en" if config.get("Email language", "").strip().lower() == "english" else "de",
         "therapy_language_label": config.get("Foreign therapy language", "").strip(),
-        # Optional scraper filters — None means no filter applied
-        "filter_availability": _lookup(config.get("Availability", ""), AVAILABILITY_MAP),
-        "filter_insurance":    _lookup(config.get("Insurance filter", ""), INSURANCE_MAP),
-        "filter_language":     _lookup(config.get("Foreign therapy language", ""), LANGUAGE_MAP),
-        "filter_therapy_type": _lookup(config.get("Therapy format", ""), THERAPY_TYPE_MAP),
-        "filter_focus":        _lookup(config.get("Focus / topic", ""), FOCUS_MAP),
-        "filter_gender":       _lookup(config.get("Therapist gender", ""), GENDER_MAP),
+        # Scraper filters — availability is stored as a stage list (see _build_availability_stages)
+        "filter_availability_stages": _build_availability_stages(config.get("Availability", "")),
+        "filter_insurance":           _lookup(config.get("Therapist insurance", ""), INSURANCE_MAP),
+        "filter_language":        _lookup(config.get("Foreign therapy language", ""), LANGUAGE_MAP),
+        "filter_therapy_type":    _lookup(config.get("Therapy format", ""), THERAPY_TYPE_MAP),
+        "filter_focus":           _lookup(config.get("Focus / topic", ""), FOCUS_MAP),
+        "filter_gender":          _lookup(config.get("Therapist gender", ""), GENDER_MAP),
+        # Insurance letter fields (all optional — stay as {placeholder} if empty)
+        "insurance_number":       config.get("Insurance number", ""),
+        "insurance_email":        config.get("Insurance email", ""),
+        "application_date":       config.get("Application date", ""),
+        "followup_date":          config.get("Follow-up date", ""),
+        "rejection_date":         config.get("Rejection date", ""),
     }
 
 
 # ---------------------------------------------------------------------------
-# Output: therapist list
+# Output: therapist list + individual email files
 # ---------------------------------------------------------------------------
 
 def save_therapists_txt(therapists: list, path: Path) -> None:
-    """Save scraped therapist list as a readable text file."""
     lines = [
         "Therapist Contact List",
         f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}",
@@ -206,17 +263,11 @@ def save_therapists_txt(therapists: list, path: Path) -> None:
         lines.append(f"   Address: {t.get('address', 'N/A')}")
         lines.append(f"   Profile: {t['profile_url']}")
         lines.append("")
-
     path.write_text("\n".join(lines), encoding="utf-8")
     print(f"Saved therapist list → {path}")
 
 
-# ---------------------------------------------------------------------------
-# Output: individual email files
-# ---------------------------------------------------------------------------
-
 def save_email_files(emails: list, output_dir: Path) -> None:
-    """Save each email as a numbered .txt file."""
     output_dir.mkdir(parents=True, exist_ok=True)
     for i, email in enumerate(emails, 1):
         safe_name = "".join(
@@ -234,18 +285,16 @@ def save_email_files(emails: list, output_dir: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Output: response tracking CSV
+# Output: contact tracking CSV
 # ---------------------------------------------------------------------------
 
-def save_response_tracking_csv(therapists: list, path: Path) -> None:
+def save_contact_csv(therapists: list, path: Path) -> None:
     """
-    Append new therapists to responses.csv, skipping any already present (by email).
+    Append new therapists to a contact CSV, skipping duplicates by email.
     Creates the file with a header if it doesn't exist yet.
-    The file is the contact log submitted to the insurance as proof of search.
     """
     header = ["Name", "Email", "Address", "Date contacted", "Response received (Yes/No)", "Response date", "Notes"]
 
-    # Load existing entries to avoid duplicates
     existing_emails = set()
     if path.exists():
         with open(path, "r", encoding="utf-8", newline="") as f:
@@ -255,7 +304,6 @@ def save_response_tracking_csv(therapists: list, path: Path) -> None:
 
     new_entries = [t for t in therapists if t["email"].strip().lower() not in existing_emails]
 
-    # Write header if file is new, then append new entries
     write_header = not path.exists()
     with open(path, "a", encoding="utf-8", newline="") as f:
         writer = csv.writer(f)
@@ -273,28 +321,58 @@ def save_response_tracking_csv(therapists: list, path: Path) -> None:
             ])
 
     if new_entries:
-        print(f"Added {len(new_entries)} new therapists to responses.csv → {path}")
+        print(f"Added {len(new_entries)} new therapists → {path}")
     else:
-        print(f"No new therapists to add to responses.csv (all already present)")
+        print(f"No new therapists to add (all already present) → {path}")
 
 
 # ---------------------------------------------------------------------------
-# Output: emails.html
+# Output: HTML viewers
 # ---------------------------------------------------------------------------
 
 def _build_mailto(email: dict) -> str:
-    """Build a mailto: URL pre-filled with subject and body."""
     subject = urllib.parse.quote(email["subject"])
     body = email["body"]
-    # mailto: body has a ~2000 char limit in many email clients
     if len(body) > 1800:
         body = body[:1800] + "\n\n[Text gekürzt — vollständigen Text in der E-Mail-Datei lesen]"
     body = urllib.parse.quote(body)
-    return f"mailto:{email['to']}?subject={subject}&body={body}"
+    to = email.get("to", "")
+    return f"mailto:{to}?subject={subject}&body={body}"
+
+
+_SHARED_CSS = """
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      max-width: 860px; margin: 40px auto; padding: 0 20px;
+      background: #f4f4f4; color: #222;
+    }
+    h1 { font-size: 1.4rem; color: #2E4057; margin-bottom: 4px; }
+    .subtitle { color: #666; margin: 0 0 28px; font-size: 0.9rem; }
+    .card {
+      background: white; border-radius: 8px; padding: 20px;
+      margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .card-header {
+      display: flex; align-items: center; gap: 10px;
+      flex-wrap: wrap; margin-bottom: 10px;
+    }
+    .btn {
+      background: #2E4057; color: white;
+      padding: 6px 14px; border-radius: 6px; text-decoration: none;
+      font-size: 0.85rem; white-space: nowrap; border: none; cursor: pointer;
+    }
+    .btn:hover { background: #1a2d3d; }
+    .subject { color: #555; margin-bottom: 12px; font-size: 0.93rem; }
+    pre.body {
+      white-space: pre-wrap; font-family: inherit; font-size: 0.9rem;
+      background: #f9f9f9; border-left: 3px solid #ddd;
+      padding: 14px; margin: 0; border-radius: 0 4px 4px 0; line-height: 1.6;
+    }
+"""
 
 
 def generate_html(emails: list, path: Path) -> None:
-    """Generate a browser-viewable HTML file with one card per email."""
+    """Multi-card HTML for therapist outreach emails (options 1–4)."""
     cards = []
     for i, email in enumerate(emails, 1):
         mailto = _build_mailto(email)
@@ -310,7 +388,7 @@ def generate_html(emails: list, path: Path) -> None:
         <span class="count">{i} / {len(emails)}</span>
         <strong class="name">{email['to_name']}</strong>
         <span class="addr">&lt;{email['to']}&gt;</span>
-        <a class="btn" href="{mailto}">Open in email app</a>
+        <a class="btn" href="{mailto}" style="margin-left:auto">Open in email app</a>
       </div>
       <div class="subject"><strong>Subject:</strong> {email['subject']}</div>
       <pre class="body">{body_escaped}</pre>
@@ -323,39 +401,13 @@ def generate_html(emails: list, path: Path) -> None:
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Therapist Emails ({len(emails)})</title>
   <style>
-    body {{
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      max-width: 860px; margin: 40px auto; padding: 0 20px;
-      background: #f4f4f4; color: #222;
-    }}
-    h1 {{ font-size: 1.4rem; color: #2E4057; margin-bottom: 4px; }}
-    .subtitle {{ color: #666; margin: 0 0 28px; font-size: 0.9rem; }}
-    .card {{
-      background: white; border-radius: 8px; padding: 20px;
-      margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-    }}
-    .card-header {{
-      display: flex; align-items: baseline; gap: 10px;
-      flex-wrap: wrap; margin-bottom: 10px;
-    }}
+{_SHARED_CSS}
     .count {{
       background: #2E4057; color: white; border-radius: 12px;
       padding: 2px 9px; font-size: 0.8rem; white-space: nowrap;
     }}
     .name {{ font-size: 1rem; }}
     .addr {{ color: #888; font-size: 0.88rem; flex: 1; }}
-    .btn {{
-      margin-left: auto; background: #2E4057; color: white;
-      padding: 6px 14px; border-radius: 6px; text-decoration: none;
-      font-size: 0.85rem; white-space: nowrap;
-    }}
-    .btn:hover {{ background: #1a2d3d; }}
-    .subject {{ color: #555; margin-bottom: 12px; font-size: 0.93rem; }}
-    pre.body {{
-      white-space: pre-wrap; font-family: inherit; font-size: 0.9rem;
-      background: #f9f9f9; border-left: 3px solid #ddd;
-      padding: 14px; margin: 0; border-radius: 0 4px 4px 0; line-height: 1.6;
-    }}
   </style>
 </head>
 <body>
@@ -370,7 +422,285 @@ def generate_html(emails: list, path: Path) -> None:
 </html>"""
 
     path.write_text(html, encoding="utf-8")
-    print(f"Saved emails.html → {path}")
+    print(f"Saved emails HTML → {path}")
+
+
+def generate_insurance_html(email: dict, path: Path, attachments_note: str = None) -> None:
+    """Single-card HTML for insurance letters (options 5–8)."""
+    mailto = _build_mailto(email)
+    body_escaped = (
+        email["body"]
+        .replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+    )
+    to_display = (
+        f"{email['to_name']} &lt;{email['to']}&gt;"
+        if email.get("to")
+        else email["to_name"]
+    )
+
+    attachments_html = ""
+    if attachments_note:
+        attachments_html = f'<div class="attachments"><strong>Attachments to include:</strong> {attachments_note}</div>'
+
+    html = f"""<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{email['subject']}</title>
+  <style>
+{_SHARED_CSS}
+    .to {{ color: #555; font-size: 0.93rem; flex: 1; }}
+    .btn-copy {{ background: #555; }}
+    .btn-copy:hover {{ background: #333; }}
+    .attachments {{
+      margin-top: 16px; padding: 12px 16px;
+      background: #fff8e1; border-left: 3px solid #f9a825;
+      border-radius: 0 4px 4px 0; font-size: 0.88rem; color: #555;
+    }}
+  </style>
+  <script>
+    function copyBody() {{
+      const text = document.getElementById('email-body').innerText;
+      navigator.clipboard.writeText(text).then(() => {{
+        const btn = document.getElementById('copy-btn');
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = 'Copy text', 2000);
+      }});
+    }}
+  </script>
+</head>
+<body>
+  <h1>{email['subject']}</h1>
+  <p class="subtitle">Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}</p>
+  <div class="card">
+    <div class="card-header">
+      <span class="to"><strong>To:</strong> {to_display}</span>
+      <a class="btn" href="{mailto}">Open in email app</a>
+      <button class="btn btn-copy" id="copy-btn" onclick="copyBody()">Copy text</button>
+    </div>
+    <div class="subject"><strong>Subject:</strong> {email['subject']}</div>
+    <pre class="body" id="email-body">{body_escaped}</pre>
+    {attachments_html}
+  </div>
+</body>
+</html>"""
+
+    path.write_text(html, encoding="utf-8")
+    print(f"Saved HTML → {path}")
+
+
+# ---------------------------------------------------------------------------
+# CSV picker — select a specific therapist from an output CSV
+# ---------------------------------------------------------------------------
+
+def pick_from_csv(path: Path, label: str) -> tuple[str, str] | tuple[None, None]:
+    """
+    Show a numbered list of entries from a contact CSV and let the user pick one.
+    Option 0 allows the user to enter name and email manually (for therapists found outside the tool).
+    Returns (name, email) tuple, or (None, None) if skipped.
+    """
+    entries = []
+    if path.exists():
+        with open(path, "r", encoding="utf-8", newline="") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                entries.append(row)
+
+    print(f"\nSelect the {label} for this email:")
+    print(f"  0. Enter name and email manually (or leave blank to fill in later)")
+    if entries:
+        for i, entry in enumerate(entries, 1):
+            print(f"  {i}. {entry['Name']}  <{entry['Email']}>")
+    else:
+        print(f"  (No entries found in {path.name} — run option 4 first, or enter manually)")
+    print()
+
+    while True:
+        max_choice = len(entries)
+        choice = input(f"Enter number (0–{max_choice}): ").strip()
+        try:
+            idx = int(choice)
+            if idx == 0:
+                name = input("Therapist name (or press Enter to leave as placeholder): ").strip()
+                email = input("Therapist email (or press Enter to leave as placeholder): ").strip()
+                return (name or None, email or None)
+            if 1 <= idx <= max_choice:
+                entry = entries[idx - 1]
+                return (entry["Name"], entry["Email"])
+        except ValueError:
+            pass
+        print("  Invalid choice, try again.")
+
+
+# ---------------------------------------------------------------------------
+# Shared flow helpers
+# ---------------------------------------------------------------------------
+
+def _build_user_config(config: dict) -> dict:
+    """Build the user_config dict passed to generate_emails_for_therapists."""
+    lang_label = config["therapy_language_label"]
+    if lang_label:
+        therapy_language_question = f"Do you offer therapy in {lang_label.capitalize()}?"
+    else:
+        therapy_language_question = "Do you offer therapy in German and English?"
+
+    return {
+        "patient_name":              config["patient_name"],
+        "patient_city":              config["patient_city"],
+        "insurance_type":            config["insurance_type"],
+        "insurance_company":         config["insurance_company"],
+        "symptoms":                  config["symptoms"],
+        "previous_diagnosis":        config["previous_diagnosis"],
+        "therapy_language_question": therapy_language_question,
+    }
+
+
+def run_scraper_option(
+    config: dict,
+    base_dir: Path,
+    output_dir: Path,
+    data_dir: Path,
+    emails_dir: Path,
+    template_name: str,
+    csv_path: Path,
+    html_path: Path,
+    warnings: list,
+    insurance_override=_UNSET,
+    stages_override=_UNSET,
+    language_override=_UNSET,
+    focus_override=_UNSET,
+    therapy_type_override=_UNSET,
+    gender_override=_UNSET,
+):
+    """Shared flow for scraper-based options (1–4)."""
+    # Stale CSV warning
+    if csv_path.exists():
+        print(f"\n{'=' * 50}")
+        print(f"  HEADS UP: {csv_path.name} already exists.")
+        print(f"  New therapists will be appended to it.")
+        print(f"  If this is a fresh start, delete it from output/ first.")
+        print("=" * 50)
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    data_dir.mkdir(parents=True, exist_ok=True)
+
+    if emails_dir.exists():
+        shutil.rmtree(emails_dir)
+
+    # Use override if explicitly provided by the menu option, otherwise fall back to config
+    insurance    = config["filter_insurance"]           if insurance_override    is _UNSET else insurance_override
+    stages       = config["filter_availability_stages"] if stages_override       is _UNSET else stages_override
+    language     = config["filter_language"]            if language_override     is _UNSET else language_override
+    focus        = config["filter_focus"]               if focus_override        is _UNSET else focus_override
+    therapy_type = config["filter_therapy_type"]        if therapy_type_override is _UNSET else therapy_type_override
+    gender       = config["filter_gender"]              if gender_override       is _UNSET else gender_override
+
+    print(f"\nSearching for therapists near {config['zip_code']}...")
+    print("This will take a few minutes — please leave the window open.\n")
+
+    therapists = collect_therapists(
+        zip_code=config["zip_code"],
+        target_count=config["target_count"],
+        delay_seconds=2.5,
+        search_stages=stages,
+        insurance_type=insurance,
+        language=language,
+        therapy_type=therapy_type,
+        focus=focus,
+        gender=gender,
+    )
+
+    if not therapists:
+        print("\nNo therapists found. Check your filters and try again.")
+        return
+
+    save_therapists_to_json(therapists, str(data_dir / "therapists.json"))
+    save_therapists_txt(therapists, output_dir / "therapists.txt")
+
+    template_path = base_dir / "templates" / (
+        f"{template_name}_en.txt" if config["email_language"] == "en" else f"{template_name}.txt"
+    )
+    print(f"\nGenerating {len(therapists)} emails...")
+    emails = generate_emails_for_therapists(therapists, _build_user_config(config), str(template_path))
+
+    save_emails_to_json(emails, str(data_dir / "emails.json"))
+    save_email_files(emails, emails_dir)
+    save_contact_csv(therapists, csv_path)
+    generate_html(emails, html_path)
+
+    print(f"\nOpening {html_path.name} in your browser...")
+    webbrowser.open(html_path.as_uri())
+
+    print("\nDone!")
+    print(f"  Therapist list:   output/therapists.txt")
+    print(f"  Email files:      {emails_dir.relative_to(base_dir)}/")
+    print(f"  Email viewer:     {html_path.relative_to(base_dir)}")
+    print(f"  Contact tracker:  {csv_path.relative_to(base_dir)}")
+
+    if warnings:
+        print("\nWarnings (filters ignored):")
+        for w in warnings:
+            print(f"  WARNING: {w}")
+
+
+def run_insurance_option(
+    config: dict,
+    base_dir: Path,
+    output_dir: Path,
+    template_name: str,
+    html_path: Path,
+    extra_fields: dict = None,
+    attachments_note: str = None,
+):
+    """Shared flow for insurance letter options (5–8)."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    merged = dict(config)
+    if extra_fields:
+        merged.update(extra_fields)
+
+    template_path = base_dir / "templates" / (
+        f"{template_name}_en.txt" if config["email_language"] == "en" else f"{template_name}.txt"
+    )
+
+    email = generate_insurance_email(merged, str(template_path))
+    generate_insurance_html(email, html_path, attachments_note=attachments_note)
+
+    print(f"\nOpening {html_path.name} in your browser...")
+    webbrowser.open(html_path.as_uri())
+
+    print("\nDone!")
+    print(f"  Email viewer: {html_path.relative_to(base_dir)}")
+
+
+# ---------------------------------------------------------------------------
+# Menu
+# ---------------------------------------------------------------------------
+
+MENU = """
+  #   Step                                   What you need
+  ─────────────────────────────────────────────────────────────────────────
+  1   Search for therapists + send           my_data.csv
+      outreach emails
+  2   Request probationary sessions          my_data.csv
+      (to get PTV11 + urgency note)
+  3   Contact public therapists for          my_data.csv
+      insurance documentation
+  4   Find a private therapist               my_data.csv
+      (Kostenerstattung)
+  5   Apply for reimbursement                my_data.csv + private_therapists.csv
+                                             (run option 4 first)
+  6   Follow up — no response from           my_data.csv
+      insurance                              (Application date field filled in)
+  7   Appeal a rejection                     my_data.csv + private_therapists.csv
+                                             (Rejection date field filled in)
+  8   Legal threat — being ignored           my_data.csv
+                                             (Application date + Follow-up date)
+  ─────────────────────────────────────────────────────────────────────────
+"""
 
 
 # ---------------------------------------------------------------------------
@@ -381,16 +711,15 @@ def main():
     base_dir = Path(__file__).parent
     csv_path = base_dir / "my_data.csv"
     output_dir = base_dir / "output"
-    emails_dir = output_dir / "emails"
+    data_dir = output_dir / ".data"
 
-    # --- 1. Read config ---
-    print("=" * 50)
-    print("Therapy Finder — Kostenerstattung Tool")
-    print("=" * 50)
+    print("=" * 60)
+    print("  Therapy Finder — Kostenerstattung Tool")
+    print("=" * 60)
 
     if not csv_path.exists():
         print("\nERROR: my_data.csv not found.")
-        print("Make sure it is in the same folder as main.py and try again.")
+        print("Copy my_data.csv.example → my_data.csv, fill it in, and run again.")
         sys.exit(1)
 
     print("\nReading my_data.csv...")
@@ -409,96 +738,141 @@ def main():
     config = parse_config(raw_config)
     print(f"  Name:      {config['patient_name']}")
     print(f"  Location:  {config['patient_city']} ({config['zip_code']})")
-    print(f"  Insurance: {config['insurance_type']} — {config['insurance_company']}")
-    print(f"  Target:    {config['target_count']} therapists")
+    print(f"  Your insurance: {config['insurance_type']} — {config['insurance_company']}")
 
-    # --- 2. Stale file warning ---
-    responses_path = output_dir / "responses.csv"
-    if responses_path.exists():
-        print("\n" + "=" * 50)
-        print("  HEADS UP: responses.csv already exists.")
-        print("  New therapists will be appended to it.")
-        print("  If this is a fresh start, delete output/responses.csv first.")
-        print("=" * 50)
+    print(MENU)
+    choice = input("Enter a number (1–8): ").strip()
 
-    # --- 3. Scrape ---
-    print(f"\nSearching for therapists near {config['zip_code']}...")
-    print("This will take a few minutes — please leave the window open.\n")
+    if choice == "1":
+        # Free-form search — all CSV filters (availability, therapist insurance, etc.) apply
+        run_scraper_option(
+            config, base_dir, output_dir, data_dir,
+            emails_dir=output_dir / "emails",
+            template_name="therapy_request",
+            csv_path=output_dir / "busy_therapists.csv",
+            html_path=output_dir / "emails.html",
+            warnings=warnings,
+        )
 
-    output_dir.mkdir(parents=True, exist_ok=True)
-    data_dir = output_dir / ".data"
-    data_dir.mkdir(parents=True, exist_ok=True)
+    elif choice == "2":
+        # Probationary sessions — always public insurance, no availability filter.
+        # Language, focus, format, gender respected from CSV.
+        run_scraper_option(
+            config, base_dir, output_dir, data_dir,
+            emails_dir=output_dir / "probationary_emails",
+            template_name="probationary_request",
+            csv_path=output_dir / "probationary_therapists.csv",
+            html_path=output_dir / "probationary_emails.html",
+            warnings=warnings,
+            insurance_override=INSURANCE_MAP["public"],
+            stages_override=[(None, None), (None, 25)],
+        )
 
-    # Clear individual email files from previous run
-    if emails_dir.exists():
-        shutil.rmtree(emails_dir)
+    elif choice == "3":
+        # Documentation search — always public insurance, long wait times cascade.
+        # Language, focus, format, gender intentionally ignored: the goal is to
+        # document as many contacts as possible, not find the ideal therapist.
+        run_scraper_option(
+            config, base_dir, output_dir, data_dir,
+            emails_dir=output_dir / "emails",
+            template_name="therapy_request",
+            csv_path=output_dir / "busy_therapists.csv",
+            html_path=output_dir / "emails.html",
+            warnings=warnings,
+            insurance_override=INSURANCE_MAP["public"],
+            stages_override=_build_availability_stages("no"),
+            language_override=None,
+            focus_override=None,
+            therapy_type_override=None,
+            gender_override=None,
+        )
 
-    therapists = collect_therapists(
-        zip_code=config["zip_code"],
-        target_count=config["target_count"],
-        delay_seconds=2.5,
-        insurance_type=config["filter_insurance"],
-        availability=config["filter_availability"],
-        language=config["filter_language"],
-        therapy_type=config["filter_therapy_type"],
-        focus=config["filter_focus"],
-        gender=config["filter_gender"],
-    )
+    elif choice == "4":
+        # Private therapist search — always kostenerstattung insurance, "yes" availability
+        # cascade (available now → up to 3 months, expanding to 25km if needed).
+        # Language, focus, format, gender respected from CSV.
+        run_scraper_option(
+            config, base_dir, output_dir, data_dir,
+            emails_dir=output_dir / "private_emails",
+            template_name="private_inquiry",
+            csv_path=output_dir / "private_therapists.csv",
+            html_path=output_dir / "private_emails.html",
+            warnings=warnings,
+            insurance_override=INSURANCE_MAP["kostenerstattung"],
+            stages_override=_build_availability_stages("yes"),
+        )
 
-    if not therapists:
-        print("\nNo therapists found. Check your zip code and try again.")
-        sys.exit(1)
+    elif choice == "5":
+        print("\n" + "=" * 60)
+        print("  Before you proceed, make sure you have these documents")
+        print("  ready to attach to the email:")
+        print()
+        print("    1. Contact list (your busy_therapists.csv exported)")
+        print("    2. PTV11 form with urgency label (from probationary sessions)")
+        print("    3. Written confirmation from your private therapist")
+        print("    4. Medical certificate of necessity (from your doctor)")
+        print()
+        print("  You will need to attach these manually after opening the email.")
+        print("=" * 60)
+        input("\n  Press Enter when you're ready to continue... ")
 
-    save_therapists_to_json(therapists, str(data_dir / "therapists.json"))
-    save_therapists_txt(therapists, output_dir / "therapists.txt")
+        therapist_name, therapist_email = pick_from_csv(
+            output_dir / "private_therapists.csv",
+            label="private therapist",
+        )
+        extra = {}
+        if therapist_name:
+            extra["private_therapist_name"] = therapist_name
+        if therapist_email:
+            extra["private_therapist_email"] = therapist_email
+        run_insurance_option(
+            config, base_dir, output_dir,
+            template_name="insurance_application",
+            html_path=output_dir / "insurance_application.html",
+            extra_fields=extra if extra else None,
+            attachments_note=(
+                "Contact list (busy_therapists.csv), "
+                "PTV11 form with urgency note, "
+                "confirmation from private therapist, "
+                "medical certificate of necessity"
+            ),
+        )
 
-    # --- 4. Generate emails ---
-    print(f"\nGenerating {len(therapists)} emails...")
+    elif choice == "6":
+        run_insurance_option(
+            config, base_dir, output_dir,
+            template_name="insurance_followup",
+            html_path=output_dir / "insurance_followup.html",
+        )
 
-    lang_label = config["therapy_language_label"]
-    if lang_label:
-        therapy_language_question = f"Do you offer therapy in {lang_label.capitalize()}?"
+    elif choice == "7":
+        therapist_name, therapist_email = pick_from_csv(
+            output_dir / "private_therapists.csv",
+            label="private therapist",
+        )
+        extra = {}
+        if therapist_name:
+            extra["private_therapist_name"] = therapist_name
+        if therapist_email:
+            extra["private_therapist_email"] = therapist_email
+        run_insurance_option(
+            config, base_dir, output_dir,
+            template_name="appeal_rejection",
+            html_path=output_dir / "appeal_rejection.html",
+            extra_fields=extra if extra else None,
+            attachments_note="Original application with all supporting documents",
+        )
+
+    elif choice == "8":
+        run_insurance_option(
+            config, base_dir, output_dir,
+            template_name="appeal_ignored",
+            html_path=output_dir / "appeal_ignored.html",
+        )
+
     else:
-        therapy_language_question = "Do you offer therapy in German and English?"
-
-    user_config = {
-        "patient_name":              config["patient_name"],
-        "patient_city":              config["patient_city"],
-        "insurance_type":            config["insurance_type"],
-        "insurance_company":         config["insurance_company"],
-        "symptoms":                  config["symptoms"],
-        "previous_diagnosis":        config["previous_diagnosis"],
-        "therapy_language_question": therapy_language_question,
-    }
-
-    emails = generate_emails_for_therapists(
-        therapists,
-        user_config,
-        str(base_dir / "templates" / ("therapy_request_en.txt" if config["email_language"] == "en" else "therapy_request.txt")),
-    )
-
-    save_emails_to_json(emails, str(data_dir / "emails.json"))
-    save_email_files(emails, emails_dir)
-    save_response_tracking_csv(therapists, output_dir / "responses.csv")
-
-    # --- 5. HTML output ---
-    html_path = output_dir / "emails.html"
-    generate_html(emails, html_path)
-
-    # --- 6. Open in browser ---
-    print(f"\nOpening emails.html in your browser...")
-    webbrowser.open(html_path.as_uri())
-
-    print("\nDone!")
-    print(f"  Therapist list:    output/therapists.txt")
-    print(f"  Email files:       output/emails/")
-    print(f"  Email viewer:      output/emails.html")
-    print(f"  Response tracker:  output/responses.csv")
-
-    if warnings:
-        print("\nWarnings (filters that were ignored):")
-        for w in warnings:
-            print(f"  WARNING: {w}")
+        print(f"\nInvalid choice '{choice}'. Please run again and enter a number 1–8.")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

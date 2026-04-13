@@ -155,6 +155,38 @@ def save_emails_to_json(emails: List[Dict[str, str]], output_path: str = "data/e
     print(f"Saved {len(emails)} emails to {output_path}")
 
 
+def generate_insurance_email(config: dict, template_path: str) -> dict:
+    """
+    Generate a single insurance letter from user config (no therapist involved).
+    Placeholders with no corresponding config value remain as {placeholder}
+    so the user can edit them before sending.
+    """
+    template = load_template(template_path)
+
+    filled = template
+    for key, value in config.items():
+        if value:
+            filled = filled.replace(f"{{{key}}}", str(value))
+
+    lines = filled.split('\n')
+    subject = ""
+    body_start = 0
+    for i, line in enumerate(lines):
+        if line.startswith("Betreff:") or line.startswith("Subject:"):
+            subject = line.split(":", 1)[1].strip()
+            body_start = i + 1
+            break
+
+    body = '\n'.join(lines[body_start:]).strip()
+
+    return {
+        "to": config.get("insurance_email", ""),
+        "to_name": config.get("insurance_company", ""),
+        "subject": subject,
+        "body": body,
+    }
+
+
 if __name__ == "__main__":
     # Test the email generator
     print("Testing email generator...")

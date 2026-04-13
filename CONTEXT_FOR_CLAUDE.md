@@ -12,21 +12,20 @@
 - Tested end-to-end with real therapie.de data
 
 ### Phase 2: Email Templates ✅
-- German and English templates (`templates/therapy_request.txt`, `therapy_request_en.txt`)
+- All 12 templates written (6 DE/EN pairs): `therapy_request`, `probationary_request`, `private_inquiry`, `insurance_application`, `insurance_followup`, `appeal_rejection`, `appeal_ignored`
 - Mail merge via `src/email_generator.py` — placeholder replacement, language detection, optional diagnosis field
-- English template asks "Do you offer therapy in [language]?" — dynamically filled from CSV; falls back to "Do you offer therapy in German and English?" if no language set
-- Single straightforward template (not bureaucratic) — more likely to get responses
+- `generate_insurance_email()` added for insurance letters (no therapist — fills from config, unfilled placeholders stay visible)
+- Insurance/appeal templates cite § 2 Abs. 1 + § 13 Abs. 3 SGB V; EN versions are DE + EN side by side
 
-### Phase 3: Protocol Generator ✅
-- `src/protocol_generator.py` — reads filled-in `output/responses.csv` + `my_data.csv`, outputs `output/protocol.txt`
-- Formal German document: patient info, search criteria, full contact list with dates/outcomes, declaration paragraph
-- Run with `python main.py --protocol`
-
-### main.py: Full end-to-end flow ✅
-- Reads `my_data.csv`, scrapes, generates emails, opens `output/emails.html` in browser
-- Output structure: `emails.html`, `responses.csv`, `therapists.txt`, `emails/`, `.data/` (internal JSONs)
-- `emails/` cleared at start of each run to prevent stale file accumulation
-- `profile_url` removed from `responses.csv` (keeps scraping source out of insurance documents)
+### Phase 2b: Interactive menu + full wiring ✅ (2026-04-05)
+- `main.py` refactored to interactive numbered menu (8 options) — no CLI flags
+- Options 1–4: scraper-based (therapist outreach), each writes to its own CSV and HTML
+- Options 5–8: insurance letters (no scraper), single-card HTML with mailto + "Copy text" button
+- `run_scraper_option()` shared helper with sentinel-based filter overrides
+- `run_insurance_option()` shared helper for insurance letters
+- `pick_from_csv()` — reads a contact CSV, shows numbered list, user picks therapist (used by options 5 and 7 to fill `{private_therapist_name}`)
+- `save_contact_csv()` (renamed from `save_response_tracking_csv`) — serves all 3 contact CSVs
+- `generate_insurance_html()` — single-card HTML with mailto + JS clipboard copy button
 
 ### Search filters ✅
 - All therapie.de filter params wired: availability, insurance, foreign language, therapy format, focus/topic, therapist gender
@@ -35,13 +34,18 @@
 - `terminzeitraum` bug fixed: `4` = "wait over 12 months" (not "available now"); `1` = available now
 - Full param reference with English translations: `docs/therapie_de_filter_params.md`
 
+### my_data.csv optional fields ✅
+- Added: `Insurance number`, `Insurance email`, `Application date`, `Follow-up date`, `Rejection date`
+- All optional — if empty, placeholder stays in the email for manual editing before sending
+- Private/probationary therapist info is NOT in my_data.csv — comes from output CSVs instead
+
 ---
 
 ## Project Summary
 
 **Name**: Therapy Finder for Kostenerstattung
 **Purpose**: Automate the bureaucratic process of finding therapists and documenting contacts for German health insurance cost reimbursement (Kostenerstattung)
-**Status**: MVP complete — tested end-to-end. Next: PyInstaller executable + documentation.
+**Status**: Core functionality complete. Menu-based flow wired end-to-end. Next: test all 8 menu options, then README + PyInstaller.
 **Tech Stack**: Python-first, terminal application, JSON data storage
 
 ---
@@ -243,88 +247,87 @@ busy_therapists/
 ✅ Dynamic language question in English email template
 ✅ docs/therapie_de_filter_params.md with English translations
 
-**Current status (2026-04-04)**: MVP complete and tested end-to-end. All phases 1–3 done and committed.
+**Current status (2026-04-05):** Interactive menu fully implemented. Not yet tested end-to-end.
 
-**README work in progress (2026-04-04)**: Working on Phase 4 (documentation). A user guide draft has been written collaboratively and saved to `GUIDE_DRAFT.md`. The guide covers the full Kostenerstattung process step by step, written for someone with mental health challenges. **Next session: user will review `GUIDE_DRAFT.md`, give feedback, then it gets integrated into `README.md` in the appropriate place. The README itself still needs to be fully rewritten** (current README is outdated — wrong feature list, wrong status, stale). Legal basis section intentionally omitted from README per user preference.
+**What was done in this session:**
+- Removed `protocol_generator.py` (over-engineered; contact CSVs serve as the contact log)
+- Written all 12 email templates (6 DE/EN pairs)
+- `main.py` fully refactored: interactive 8-option menu, no CLI flags
+- `generate_insurance_email()` added to `email_generator.py`
+- `generate_insurance_html()` added to `main.py` (single-card, mailto + Copy text button)
+- `pick_from_csv()` — lets user pick a therapist from an output CSV (options 5 and 7)
+- `save_contact_csv()` replaces `save_response_tracking_csv()` (serves all 3 contact CSVs)
+- `my_data.csv.example` updated with new optional insurance fields
+- `{max_wait_months}` removed — hardcoded to "3 months" in insurance_application template
+- Private/probationary therapist data removed from `my_data.csv` — comes from output CSVs
+- Everything is digital — no physical mail, mailto buttons on all options including 5–8
+
+**Uncommitted changes:** `CONTEXT_FOR_CLAUDE.md`, `main.py`, `src/email_generator.py`, `my_data.csv.example`, `templates/insurance_application.txt`, `templates/insurance_application_en.txt`
+
+**IMMEDIATE NEXT TASK: Test all 8 menu options end-to-end.**
+- Options 1–4: verify scraper runs, correct CSV/HTML written, correct template used, filter overrides correct
+- Options 5–8: verify placeholder substitution, mailto pre-filled, Copy button works, attachments note shown
+- Key thing to check: unfilled optional fields (e.g. `insurance_number`) should stay as `{insurance_number}` in the email body, not disappear
+
+**README:** `GUIDE_DRAFT.md` written and reviewed by user. Needs integrating into `README.md` after testing is done.
 
 ---
 
 ## 🐛 Known Issues / To Fix
 
-- **Kostenerstattung filter exists but undocumented**: `Insurance filter: kostenerstattung` is already implemented (maps to ID 6 in INSURANCE_MAP). The README/user guide should mention this as the recommended filter when searching for private therapists willing to work with reimbursement. therapie.de's data for this filter may not be fully up to date, so users should still confirm with the therapist directly.
+- **Kostenerstattung filter undocumented in README**: `Insurance filter: kostenerstattung` is implemented (maps to ID 6). README should mention it as the recommended filter for option 4 (private therapist search). therapie.de data for this filter may be incomplete — users should confirm with the therapist directly.
 
-- **my_data.csv needs new optional fields** for templates 5–8 (insurance emails). Add these fields with empty defaults so they stay as visible placeholders if not filled in:
-  - `Insurance number` — Versichertennummer (used in all insurance emails)
-  - `Private therapist name` — name of the private therapist found (templates 5, 7, 8)
-  - `Private therapist email` — email address of private therapist (template 4 sending)
-  - `Insurance email` — email address of the Krankenkasse (templates 5, 6, 7, 8)
-  - `Application date` — date the Kostenerstattung application was sent (templates 6, 8)
-  - `Follow-up date` — date the follow-up email was sent (template 8)
-  - `Rejection date` — date of the rejection letter (template 7)
-  - `Max wait months` — longest wait time found among public therapists (template 5)
-  All fields optional. If empty, placeholder stays visible in the email so user fills it in manually.
-
-- **Insurance type not wired to scraper**: `my_data.csv` has an `Insurance type` field (public/private) used in emails, but it does NOT automatically set the scraper's insurance filter. The scraper uses the separate `Insurance filter` field. A user with private insurance who sets `Insurance type: private` won't automatically get private therapist results — they'd also need to set `Insurance filter: private`. These two fields should either be merged or `Insurance type` should auto-set the scraper filter. Raised during README writing (2026-04-04).
+- **Insurance type not wired to scraper**: `my_data.csv` has an `Insurance type` field (public/private) used in email text, but it does NOT automatically set the scraper's insurance filter. The scraper uses the separate `Insurance filter` field. A user with public insurance who leaves `Insurance filter` blank won't get filtered results — they need to also set `Insurance filter: public`. These two fields could be merged or one could auto-set the other. Deferred until README is written.
 
 ---
 
 ## ✅ Decisions Made
 
-### main.py: Interactive menu (2026-04-05)
-`main.py` will be refactored to show an **interactive numbered menu** instead of CLI flags. This is required for PyInstaller compatibility (double-click executable) and better UX for non-technical users.
+### main.py: Interactive menu ✅ DONE (2026-04-05)
+`main.py` shows an interactive numbered menu (8 options). No CLI flags. Required for PyInstaller and non-technical users.
 
-**Design:**
-- User runs the program (or double-clicks executable) → sees a numbered menu
-- They type a number to select what they need today
-- Each option tells the user what they need to have ready (e.g. "Make sure my_data.csv is filled in", "Make sure responses.csv is filled in")
-- Technical users can still use flags (e.g. `--scrape`, `--protocol`) to skip the menu
+**Menu → template → output mapping:**
+| # | Template | Scraper? | CSV written | HTML opened |
+|---|---|---|---|---|
+| 1 | `therapy_request` | ✅ user filters | `busy_therapists.csv` | `emails.html` |
+| 2 | `probationary_request` | ✅ public, no avail. filter | `probationary_therapists.csv` | `probationary_emails.html` |
+| 3 | `therapy_request` | ✅ public, avail=over 3mo | `busy_therapists.csv` | `emails.html` |
+| 4 | `private_inquiry` | ✅ kostenerstattung | `private_therapists.csv` | `private_emails.html` |
+| 5 | `insurance_application` | ❌ | — | `insurance_application.html` |
+| 6 | `insurance_followup` | ❌ | — | `insurance_followup.html` |
+| 7 | `appeal_rejection` | ❌ | — | `appeal_rejection.html` |
+| 8 | `appeal_ignored` | ❌ | — | `appeal_ignored.html` |
 
-**Menu options (mapped to templates/modes):**
-1. Search for therapists + generate outreach emails (`therapy_request`) — needs: `my_data.csv`
-2. Request a probationary session (`probationary_request`) — needs: `my_data.csv`
-3. Contact public therapists for documentation (`kassenzulassung_contact`) — needs: `my_data.csv`
-4. Find a private therapist (`private_therapist_inquiry`) — needs: `my_data.csv`
-5. Generate reimbursement application letter (`insurance_application`) — needs: `my_data.csv` + private therapist details
-6. Generate contact protocol (`--protocol` mode) — needs: `responses.csv` filled in
-7. Follow up with insurance — no response (`insurance_followup`) — needs: `my_data.csv`
-8. Appeal a rejection (`widerspruch_rejection`) — needs: `my_data.csv` + rejection letter date
-9. Legal threat — being ignored (`widerspruch_ignored`) — needs: `my_data.csv`
-
-Options 2–4 use the scraper (same as option 1 but different templates). Options 5, 7, 8, 9 are one-off documents (no scraper needed).
+Options 5 and 7 call `pick_from_csv(output/private_therapists.csv)` to fill `{private_therapist_name}`.
+Options 5–8 use `generate_insurance_html()` — single card with mailto + Copy text button.
 
 ---
 
 **Next steps (in order):**
 
-### 1. Phase 4: Documentation
-- Update README with:
-  - Legal basis section (§13 Abs. 3 SGB V, BPtK endorsement)
-  - Clear explanation of the Kostenerstattung process (see below for details)
-  - Step-by-step usage instructions
-  - Responsible use policy
-- The README should mention the full manual process the user needs to follow, including probationary sessions and urgency code (see Kostenerstattung Process section above)
+### 1. Test all 8 menu options end-to-end (IMMEDIATE)
+Run each option and verify output. See "IMMEDIATE NEXT TASK" block above.
 
-### 2. Phase 2b: Additional Email Templates
+### 2. Phase 4: Documentation
+- Integrate `GUIDE_DRAFT.md` into `README.md`
+- Add legal basis section (§13 Abs. 3 SGB V, BPtK endorsement)
+- Step-by-step usage instructions + responsible use policy
+- Mention `Insurance filter: kostenerstattung` for option 4
 
-We need 8 templates in total. Template 1 already exists. The remaining 7 need to be built.
+### 3. Phase 2b: Additional Email Templates ✅ COMPLETE
 
-**Overview of all templates:**
+All 12 template files written and committed:
 
-| # | File | Purpose | Recipient |
-|---|---|---|---|
-| 1 | `therapy_request.txt` / `_en.txt` | ✅ Exists — general therapy inquiry | Any therapist (public or private) |
-| 2 | `probationary_request.txt` | Ask for Probatorische Sitzungen (1-2 eval sessions) | A Kassenzulassung therapist |
-| 3 | `kassenzulassung_contact.txt` | Ask public therapists for availability — for documentation purposes | Public therapists |
-| 4 | `insurance_application.txt` | Formal Kostenerstattung application letter | Health insurance company (Krankenkasse) |
-| 5 | `private_therapist_inquiry.txt` | Ask private therapist: can they start soon + Fachkunde in Richtlinienverfahren + willing to do Kostenerstattung paperwork? | Private practice therapists |
-| 6 | `widerspruch_rejection.txt` | Formal Widerspruch after insurance **rejects** the application | Health insurance company |
-| 7 | `insurance_followup.txt` | Polite follow-up after ~4 weeks of no response — asking for status update | Health insurance company |
-| 8 | `widerspruch_ignored.txt` | Legal threat after being ignored even after template 7 (~5 weeks total silence) | Health insurance company |
-
-**Notes on templates 6-8:**
-- Template 6 = rejection scenario (Widerspruch — already planned, BPtK wording exists)
-- Template 7 = no response after ~4 weeks → polite status enquiry before escalating
-- Template 8 = still no response after ~5 weeks (1 week after template 7) → legal threat (different tone/wording from template 6, as this is about being ignored rather than a formal rejection)
+| Menu # | Files | Purpose | Scraper? | → responses.csv? |
+|---|---|---|---|---|
+| 1 | `therapy_request.txt` / `_en.txt` | General therapy inquiry | ✅ | ✅ |
+| 2 | `probationary_request.txt` / `_en.txt` | Request probationary session + PTV11 | ✅ | ❌ |
+| 3 | (reuses `therapy_request`) | Contact public therapists for documentation | ✅ | ✅ |
+| 4 | `private_inquiry.txt` / `_en.txt` | Find private therapist willing to do Kostenerstattung | ✅ | ❌ |
+| 5 | `insurance_application.txt` / `_en.txt` | Kostenerstattung application to insurance | ❌ | ❌ |
+| 6 | `insurance_followup.txt` / `_en.txt` | Follow up — no response after ~4 weeks | ❌ | ❌ |
+| 7 | `appeal_rejection.txt` / `_en.txt` | Formal appeal after rejection | ❌ | ❌ |
+| 8 | `appeal_ignored.txt` / `_en.txt` | Legal threat after being ignored | ❌ | ❌ |
 
 **Templates provided verbatim in the BPtK PDF (use these as the basis):**
 
@@ -423,8 +426,9 @@ Mit freundlichen Grüßen
 
 **Implementation notes:**
 - All templates need German + English versions (same pattern as template 1)
-- Templates 4 and 6 are letters (for printing), not emails — the HTML viewer should show them differently (no mailto: button, just a "Copy text" or "Print" button)
-- The `my_data.csv` will need new fields: private therapist name + address (for templates 4-6), insurance rejection letter date (for template 6)
+- All templates are emails sent digitally — no physical mail. Templates 5–8 go to the insurance company's email address.
+- HTML viewer for templates 5–8: single-card with mailto button (to insurance email) + "Copy text" clipboard button.
+- The `my_data.csv` will need new optional fields: `Insurance number`, `Insurance email`, `Private therapist name`, `Private therapist email`, `Max wait months`, `Application date`, `Follow-up date`, `Rejection date`. If left blank, placeholder stays visible for manual editing.
 - The scraper flow is only relevant for templates 1, 3, and 5 — templates 2, 4, 6 are one-off documents
 
 ### 3. Phase 4: Documentation
@@ -656,4 +660,4 @@ python /Users/sasan/spicy_projects/busy_therapists/src/scraper.py --city Berlin
 
 ---
 
-Last updated: 2026-04-04
+Last updated: 2026-04-05

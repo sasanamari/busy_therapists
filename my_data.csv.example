@@ -2,16 +2,23 @@ Field,Your data,Notes
 Name,Max Mustermann,Your full name. Used to sign the emails.
 City,Berlin,Your city name. Appears in the email body.
 Zip code,12345,Your postal code. Used to search for nearby therapists.
-Insurance type,public,"Accepted values: 'gesetzlich' or 'public' for public insurance; 'privat' or 'private' for private insurance."
+Your insurance,public,"Your own insurance type. Accepted values: 'public' (gesetzlich), 'private' (privat), 'self-pay' (Selbstzahler). Used in email text."
 Insurance company,TK (Techniker Krankenkasse),The name of your health insurance provider.
 Symptoms,Depression and anxiety,Brief description of your symptoms. This appears in the email body.
 Previous diagnosis,"Generalized Anxiety Disorder, ADHD",Optional. Your diagnosis code if you have one. Leave blank if not applicable.
 Your email,max.mustermann@gmail.com,Optional. Used in the protocol document only — not sent automatically.
 Number of therapists,20,How many therapists to contact. 20-30 is recommended for Kostenerstattung.
 Email language,German,"Language for the outreach emails. Accepted values: 'German' or 'English' (case insensitive). Leave blank to default to German."
-Availability,available now,"Optional. Options: 'available now', 'up to 3 months', 'over 3 months', 'over 12 months'. Leave blank for no filter."
-Insurance filter,,"Optional. Options: 'public' (GKV), 'private' (PKV), 'kostenerstattung', 'self-pay'. Leave blank for no filter."
+--- SEARCH FILTERS ---,,These filters apply to all therapy searches (options 1-4). Exception: when looking for busy therapists (option 3) language/focus/format/gender are ignored to maximise contacts. Availability and therapist insurance are also overridden for options 2-4.
+Availability,yes,"Optional. 'yes' = cascade from available-now to up-to-3-months (recommended). 'no' = busy therapists for documentation. Or a specific value: 'available now', 'up to 3 months', 'over 3 months', 'over 12 months'. Leave blank for no filter."
+Therapist insurance,,"Optional. The type of insurance the therapist accepts. Options: 'public' (GKV), 'private' (PKV), 'kostenerstattung', 'self-pay'. Leave blank to search all. Used as a scraper filter."
 Foreign therapy language,,"Optional. Only needed if you want therapy in a language other than German. Examples: 'English', 'Persian', 'Turkish', 'Russian'. See docs/therapie_de_filter_params.md for all options."
 Therapy format,,"Optional. Options: 'individual', 'group', 'family', 'couples', 'children'. Leave blank for no filter."
 Focus / topic,,"Optional. The main topic you want to work on. Examples: 'depression', 'anxiety', 'trauma', 'ADHD', 'burnout'. See docs/therapie_de_filter_params.md for all options."
 Therapist gender,,"Optional. Options: 'female', 'male', 'non-binary'. Leave blank for no preference."
+--- INSURANCE LETTER FIELDS ---,,The fields below are used in the insurance application and appeal emails (options 5-8). All optional — if left blank the placeholder stays visible for manual editing before sending.
+Insurance number,,"Optional. Your Versichertennummer. Used in insurance emails (application, follow-up, appeal). If left blank, {insurance_number} stays as a placeholder you can fill in before sending."
+Insurance email,,"Optional. Email address of your Krankenkasse. Used to address insurance emails. If left blank, {insurance_email} stays as a placeholder."
+Application date,,"Optional. Date you sent the Kostenerstattung application (e.g. 2026-04-01). Used in follow-up and legal threat emails. If left blank, {application_date} stays as a placeholder."
+Follow-up date,,"Optional. Date you sent the follow-up email. Used in the legal threat email. If left blank, {followup_date} stays as a placeholder."
+Rejection date,,"Optional. Date on the rejection letter from your Krankenkasse. Used in the appeal email. If left blank, {rejection_date} stays as a placeholder."

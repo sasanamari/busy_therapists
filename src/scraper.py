@@ -235,8 +235,8 @@ def collect_therapists(
     target_count: int = 20,
     max_pages: int = 10,
     delay_seconds: float = 2.5,
+    search_stages: list = None,
     insurance_type: int = None,
-    availability: int = None,
     language: int = None,
     therapy_type: int = None,
     focus: int = None,
@@ -245,80 +245,107 @@ def collect_therapists(
     """
     Collect therapist data until target count is reached.
 
-    Starts with the default search radius. If results run out before reaching
-    target_count, automatically retries with a 25km radius.
+    Works through an ordered list of (availability_id, search_radius) stages.
+    Each stage is tried in sequence — when a stage runs out of results (a page
+    returns nothing new), the next stage begins. Collection stops early if
+    target_count is reached.
+
+    This lets the caller define a search strategy declaratively, e.g.:
+        [(1, None), (2, None), (1, 25), (2, 25)]
+    means: "available now locally → up to 3 months locally → available now
+    at 25km → up to 3 months at 25km".
 
     Args:
         zip_code: German postal code (e.g., "10117")
         target_count: Number of therapists with valid emails to collect
-        max_pages: Maximum number of search result pages to process
+        max_pages: Maximum search result pages to process per stage
         delay_seconds: Delay between requests (default: 2.5 seconds)
-        insurance_type, availability, language, therapy_type, focus, gender:
-            Optional search filters. All default to None (no filter applied).
-            See scrape_search_results() for value meanings.
+        search_stages: Ordered list of (availability_id, search_radius) tuples.
+                       availability_id: None = no filter, 1 = available now,
+                         2 = up to 3 months, 3 = over 3 months, 4 = over 12 months.
+                       search_radius: None = therapie.de default (~10km), 25 = 25km.
+                       Defaults to [(None, None), (None, 25)] — no availability
+                       filter, default radius then 25km fallback.
+        insurance_type, language, therapy_type, focus, gender:
+            Optional filters applied consistently across all stages.
+            All default to None (no filter). See scrape_search_results() for values.
 
     Returns:
-        List of dictionaries containing therapist info:
-        [{"name": "...", "email": "...", "profile_url": "..."}, ...]
+        List of dicts: [{"name": "...", "email": "...", "address": "...", "profile_url": "..."}, ...]
     """
+    # Default behaviour: no availability filter, try local area first then expand to 25km
+    if search_stages is None:
+        search_stages = [(None, None), (None, 25)]
+
     collected = []
-    seen_urls = set()
-    page = 1
-    search_radius = None  # None = default radius (therapie.de decides, ~10km)
+    seen_urls = set()  # tracks all URLs we've already visited across all stages
+
+    # Human-readable labels for logging — keyed by therapie.de terminzeitraum values
+    avail_labels = {
+        None: "no availability filter",
+        1: "available now",
+        2: "up to 3 months",
+        3: "over 3 months",
+        4: "over 12 months",
+    }
 
     print(f"Searching for {target_count} therapists in {zip_code}...")
     print(f"Rate limit: {delay_seconds}s between requests\n")
 
-    while len(collected) < target_count and page <= max_pages:
-        print(f"Page {page}: Fetching search results...")
-        profile_urls = scrape_search_results(
-            zip_code,
-            page=page,
-            search_radius=search_radius,
-            insurance_type=insurance_type,
-            availability=availability,
-            language=language,
-            therapy_type=therapy_type,
-            focus=focus,
-            gender=gender,
-        )
+    for stage_idx, (availability, search_radius) in enumerate(search_stages):
+        # Stop early if we already have enough from previous stages
+        if len(collected) >= target_count:
+            break
 
-        # Detect when we've exhausted results — all remaining are duplicates or nothing returned
-        new_urls = [u for u in profile_urls if u not in seen_urls]
+        avail_label = avail_labels.get(availability, f"filter={availability}")
+        radius_label = f"{search_radius}km radius" if search_radius else "default radius"
+        print(f"--- Stage {stage_idx + 1}/{len(search_stages)}: {avail_label}, {radius_label} ---\n")
 
-        if not profile_urls:
-            # Server returned nothing — truly exhausted this radius
-            if search_radius is None:
-                print(f"\nNo more results in default radius. Expanding search to 25km...\n")
-                search_radius = 25
-                page = 1
-                continue
-            else:
-                print(f"No more results found. Stopping.")
+        page = 1
+        while len(collected) < target_count and page <= max_pages:
+            print(f"Page {page}: Fetching search results...")
+            profile_urls = scrape_search_results(
+                zip_code,
+                page=page,
+                search_radius=search_radius,
+                insurance_type=insurance_type,
+                availability=availability,
+                language=language,
+                therapy_type=therapy_type,
+                focus=focus,
+                gender=gender,
+            )
+
+            # Filter out URLs we've already processed in earlier stages or pages
+            new_urls = [u for u in profile_urls if u not in seen_urls]
+
+            if not new_urls:
+                # No new profiles on this page — either the server returned nothing or
+                # all results were already seen. Either way, this stage is exhausted.
+                print(f"Stage {stage_idx + 1} exhausted — moving to next.\n")
                 break
 
-        print(f"Found {len(new_urls)} new profiles on page {page}")
+            print(f"Found {len(new_urls)} new profiles on page {page}")
 
-        for i, profile_url in enumerate(new_urls, 1):
-            if len(collected) >= target_count:
-                break
+            for i, profile_url in enumerate(new_urls, 1):
+                if len(collected) >= target_count:
+                    break
 
-            seen_urls.add(profile_url)
+                seen_urls.add(profile_url)
+                print(f"  [{i}/{len(new_urls)}] Checking profile...")
+                time.sleep(delay_seconds)
 
-            print(f"  [{i}/{len(new_urls)}] Checking profile...")
-            time.sleep(delay_seconds)
+                therapist_info = get_therapist_profile(profile_url)
 
-            therapist_info = get_therapist_profile(profile_url)
+                if therapist_info:
+                    collected.append(therapist_info)
+                    print(f"    ✓ Found: {therapist_info['name']} - {therapist_info['email']} (Total: {len(collected)}/{target_count})")
+                else:
+                    print(f"    ✗ No email found, skipping")
 
-            if therapist_info:
-                collected.append(therapist_info)
-                print(f"    ✓ Found: {therapist_info['name']} - {therapist_info['email']} (Total: {len(collected)}/{target_count})")
-            else:
-                print(f"    ✗ No email found, skipping")
-
-        page += 1
-        if len(collected) < target_count and page <= max_pages:
-            print(f"\nMoving to page {page}...\n")
+            page += 1
+            if len(collected) < target_count and page <= max_pages:
+                print(f"\nMoving to page {page}...\n")
 
     print(f"\nCollection complete: {len(collected)} therapists with valid emails")
     return collected

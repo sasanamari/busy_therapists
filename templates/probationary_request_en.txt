@@ -2,7 +2,9 @@ Subject: Request for Probationary Sessions / Cost Reimbursement
 
 Dear {therapist_title} {therapist_name},
 
-I am looking for a therapy place and would like to apply for cost reimbursement (Kostenerstattungsverfahren) under § 13 Abs. 3 SGB V. For this process, I need probationary sessions (Probatorische Sitzungen) and the completed PTV11 form with an urgency note.
+I am looking for an appointment for probationary session(s) (Probatorische Sitzungen) and the completed PTV11 form with an urgency label.
+
+I am looking for a therapy place and would like to apply for cost reimbursement (Kostenerstattungsverfahren) under § 13 Abs. 3 SGB V. For this process, I need a completed PTV11 form with an urgency label.
 
 About me:
 - Name: {patient_name}
@@ -11,7 +13,7 @@ About me:
 
 I am struggling with {symptoms}{diagnosis_sentence}. I am in urgent need of support.
 
-Would you be willing to conduct probationary sessions (1–3 sessions) with me and subsequently complete the PTV11 form with an urgency note? I would also appreciate knowing whether I should first obtain a referral through the 116 117 service before starting the reimbursement process.
+Would you be able to conduct the probationary session(s) with me and subsequently complete the PTV11 form with an urgency label? If so, do you know whether I should first obtain a referral through the 116 117 service before starting the process?
 
 Thank you very much for your time — I look forward to hearing from you.
 
