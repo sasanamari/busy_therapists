@@ -11,7 +11,7 @@ Number of therapists,20,How many therapists to contact. 20-30 is recommended for
 Email language,German,"Language for the outreach emails. Accepted values: 'German' or 'English' (case insensitive). Leave blank to default to German."
 --- SEARCH FILTERS ---,,These filters apply to all therapy searches (options 1-4). Exception: when looking for busy therapists (option 3) language/focus/format/gender are ignored to maximise contacts. Availability and therapist insurance are also overridden for options 2-4.
 Availability,yes,"Optional. 'yes' = cascade from available-now to up-to-3-months (recommended). 'no' = busy therapists for documentation. Or a specific value: 'available now', 'up to 3 months', 'over 3 months', 'over 12 months'. Leave blank for no filter."
-Therapist insurance,,"Optional. The type of insurance the therapist accepts. Options: 'public' (GKV), 'private' (PKV), 'kostenerstattung', 'self-pay'. Leave blank to search all. Used as a scraper filter."
+Therapist insurance,,"Used in option 1, for search of therapists. The type of insurance the therapist accepts. Options: 'public' (GKV), 'private' (PKV), 'kostenerstattung', 'self-pay'. Leave blank to search all. Used as a scraper filter."
 Foreign therapy language,,"Optional. Only needed if you want therapy in a language other than German. Examples: 'English', 'Persian', 'Turkish', 'Russian'. See docs/therapie_de_filter_params.md for all options."
 Therapy format,,"Optional. Options: 'individual', 'group', 'family', 'couples', 'children'. Leave blank for no filter."
 Focus / topic,,"Optional. The main topic you want to work on. Examples: 'depression', 'anxiety', 'trauma', 'ADHD', 'burnout'. See docs/therapie_de_filter_params.md for all options."

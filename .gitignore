@@ -51,3 +51,4 @@ credentials.json
 .env
 old_files/
 my_data.csv
+.DS_Store

@@ -1,164 +1,49 @@
-# Therapy Finder for Kostenerstattung
+# Busy Therapists — Kostenerstattung Tool
 
-> **Status**: Early development / MVP phase
->
-> This project is currently under active development. Core scraping functionality is being implemented.
+> A tool to help people in Germany find therapists and build the documentation needed to apply for cost reimbursement (Kostenerstattung) from their public health insurance.
 
 ---
 
-## Overview
+## What this tool does
 
-An automated tool to help people in Germany find therapists and compile the required documentation for **Kostenerstattung** (cost reimbursement) applications.
+Finding a therapist in Germany is hard — waiting times of 3+ months are common, and navigating the system when you're already struggling is exhausting. This tool helps you search for therapists near you based on your needs (insurance type, language, therapy method, and more) and generates personalized emails to send to them directly.
 
-### The Problem
-
-Finding therapy in Germany is extremely difficult:
-- Average wait time: 3+ months for first appointment
-- For Kostenerstattung (getting public insurance to pay for private therapy), patients must document contacting 20-30+ therapists and receiving rejections
-- This bureaucratic process is especially challenging for people with mental health issues
-
-### The Solution
-
-This tool automates the process by:
-1. Searching therapist directories based on your criteria
-2. Extracting therapist contact information
-3. Generating personalized email templates
-4. Automating batch email sending (with respectful delays)
-5. Producing the required documentation for insurance applications
+If you have public health insurance and can't find a therapist with availability, there's a legal route to get your insurer to cover a private therapist instead. This tool also guides you through that process: it helps you build the required contact documentation, and generates the formal letters you'll need to submit your application — and appeal if needed.
 
 ---
 
-## Legal Basis
+## The legal basis
 
-This tool implements the process **officially recommended** by the Bundespsychotherapeutenkammer (BPtK) for applying for Kostenerstattung under **§13 Absatz 3 SGB V**.
-
-See [`docs/BPtK_Ratgeber_Kostenerstattung.pdf`](docs/BPtK_Ratgeber_Kostenerstattung.pdf) for the official guide.
+This is a well-established legal right. Under **§13 Abs. 3 SGB V**, your public health insurer is required to cover private therapy costs if you can demonstrate that the public system couldn't provide timely care. The process is officially recommended by the **Bundespsychotherapeutenkammer (BPtK)** — the federal chamber of psychotherapists. For the full background, see the [BPtK guide (PDF)](docs/BPtK_Ratgeber_Kostenerstattung.pdf).
 
 ---
 
-## Features (Planned)
+## Getting started
 
-- [x] Project structure and documentation
-- [ ] **Phase 1**: Search and scrape therapist data
-- [ ] **Phase 2**: Generate personalized email templates
-- [ ] **Phase 3**: Auto-generate Kostenerstattung protocol
-- [ ] **Phase 4**: Complete documentation
-- [ ] **Phase 5**: Batch email sending with delays
+Choose the setup path that fits you:
 
----
-
-## Installation
-
-**Prerequisites**: Python 3.8+
-
-```bash
-# Clone the repository
-git clone <repository-url>
-cd busy_therapists
-
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate  # On macOS/Linux
-
-# Install dependencies
-pip install -r requirements.txt
-```
+| I have Python installed | I don't have Python. I just want to run the program. |
+|---|---|
+| [Technical install →](docs/install_technical.md) | [Non-technical install →](docs/install_nontechnical.md) |
 
 ---
 
-## Usage
+## Using the tool
 
-### 1. Set up your data file
+Once installed, read the [step-by-step guide](docs/guide.md) — it walks you through the full Kostenerstattung process and explains which tool option to use at each stage.
 
-Copy the example data file and fill in your details:
-
-```bash
-cp my_data.csv.example my_data.csv
-```
-
-Then open `my_data.csv` in Excel or Numbers and replace the example values in the **Your data** column with your own information. The **Notes** column explains each field.
-
-> `my_data.csv` is gitignored — your personal data stays local and will never be committed.
-
-### 2. Run the tool
-
-```bash
-python main.py
-```
-
-The tool will scrape therapists near your zip code, generate personalized emails, and open `output/emails.html` in your browser. From there, click **Open in email app** to send each email from your own email client.
+For a full reference of every field in `my_data.csv`, see [my_data.csv reference](docs/my_data_reference.md).
 
 ---
 
-## Project Structure
+## Responsible use
 
-```
-busy_therapists/
-├── src/                  # Python source code
-├── templates/            # Email templates
-├── docs/                 # Reference documents
-├── data/                 # Runtime data (gitignored)
-├── tests/                # Unit tests
-└── main.py              # CLI entry point
-```
-
----
-
-## Development
-
-See [`SETUP.md`](SETUP.md) for development setup and [`PROJECT_PLAN.md`](PROJECT_PLAN.md) for the implementation roadmap.
-
----
-
-## Responsible Use
-
-This tool is intended for:
-- ✅ Personal use in applying for Kostenerstattung
-- ✅ Documenting therapy search as required by insurance
-- ✅ Legitimate healthcare access
-
-Please use responsibly:
-- Respect rate limits (built into the tool)
-- Send personalized, genuine therapy requests
-- Do not abuse or spam therapist inboxes
-- This is for personal healthcare access, not commercial use
-
----
-
-## Legal & Ethical Considerations
-
-- **Legal basis**: §13 Absatz 3 SGB V (German social insurance code)
-- **Official endorsement**: Process recommended by BPtK (Federal Chamber of Psychotherapists)
-- **Purpose**: Healthcare access, not commercial scraping
-- **Rate limiting**: Built-in delays to respect server resources
-- **Compliance**: Prepared to modify or remove if requested by data sources
-
----
-
-## Contributing
-
-This project is currently in early development. Contributions, suggestions, and feedback are welcome once the MVP is complete.
+- **Rate limiting is built in** — the tool waits between requests automatically. Don't modify this.
+- **Emails are genuine requests** — even when documenting unavailability, you're sending real inquiries, not spam.
+- **Personal use only** — this tool is for your own therapy search, not for bulk or commercial use.
 
 ---
 
 ## License
 
-TBD
-
----
-
-## Disclaimer
-
-This tool is provided as-is for educational and personal healthcare access purposes. Users are responsible for complying with all applicable laws and using the tool ethically and responsibly.
-
----
-
-## Contact
-
-For questions or concerns, please open an issue on GitHub.
-
----
-
-**Current Status**: Implementing Phase 1 (scraping functionality)
-
-Last updated: October 2025
+MIT

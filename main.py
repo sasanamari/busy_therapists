@@ -12,7 +12,7 @@ import shutil
 import sys
 import urllib.parse
 import webbrowser
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 
 # Make src/ importable regardless of where the script is called from
@@ -539,6 +539,102 @@ def pick_from_csv(path: Path, label: str) -> tuple[str, str] | tuple[None, None]
 # Shared flow helpers
 # ---------------------------------------------------------------------------
 
+def generate_responses_pdf(csv_path: Path, output_path: Path, patient_name: str) -> bool:
+    """Generate a formatted PDF of responses.csv for insurance submission.
+    Returns True if successful, False if the CSV is missing or empty."""
+    try:
+        from fpdf import FPDF
+    except ImportError:
+        print("ERROR: fpdf2 is not installed. Run: pip install fpdf2")
+        return False
+
+    if not csv_path.exists():
+        print(f"ERROR: {csv_path.name} not found. Run options 1 and/or 3 first to build your contact list.")
+        return False
+
+    rows = []
+    with open(csv_path, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            rows.append(row)
+
+    if not rows:
+        print(f"ERROR: {csv_path.name} is empty.")
+        return False
+
+    pdf = FPDF(orientation="L", unit="mm", format="A4")
+    pdf.add_page()
+    pdf.set_margins(12, 12, 12)
+    font_dir = Path(__file__).parent / "src" / "fonts"
+    pdf.add_font("DejaVu", style="", fname=str(font_dir / "DejaVuSans.ttf"))
+    pdf.add_font("DejaVu", style="B", fname=str(font_dir / "DejaVuSans-Bold.ttf"))
+
+    # Title
+    pdf.set_font("DejaVu", "B", 13)
+    pdf.cell(0, 8, "Therapist Contact Log - Kostenerstattung Application", ln=True)
+    pdf.set_font("DejaVu", "", 9)
+    pdf.cell(0, 5, f"Patient: {patient_name}    Generated: {date.today().strftime('%Y-%m-%d')}", ln=True)
+    pdf.ln(3)
+
+    # Table header
+    cols = [
+        ("Name",             52),
+        ("Email",            52),
+        ("Address",          52),
+        ("Date contacted",   25),
+        ("Response",         18),
+        ("Response date",    25),
+        ("Notes",            42),
+    ]
+    csv_keys = ["Name", "Email", "Address", "Date contacted", "Response received (Yes/No)", "Response date", "Notes"]
+
+    pdf.set_font("DejaVu", "B", 8)
+    pdf.set_fill_color(220, 220, 220)
+    for label, w in cols:
+        pdf.cell(w, 6, label, border=1, fill=True)
+    pdf.ln()
+
+    # Rows
+    line_h = 5
+    pdf.set_font("DejaVu", "", 8)
+    fill = False
+    for row in rows:
+        x0 = pdf.get_x()
+        y0 = pdf.get_y()
+
+        # First pass: measure how tall each cell needs to be
+        row_h = line_h
+        for (_, w), key in zip(cols, csv_keys):
+            h = pdf.multi_cell(w, line_h, str(row.get(key, "")), dry_run=True, output="HEIGHT")
+            row_h = max(row_h, h)
+
+        # Add a page if the row won't fit
+        if y0 + row_h > pdf.page_break_trigger:
+            pdf.add_page()
+            x0 = pdf.get_x()
+            y0 = pdf.get_y()
+
+        # Second pass: draw background + border rect, then text
+        x = x0
+        for (_, w), key in zip(cols, csv_keys):
+            if fill:
+                pdf.set_fill_color(245, 245, 245)
+                pdf.rect(x, y0, w, row_h, style="F")
+            pdf.rect(x, y0, w, row_h, style="D")
+            pdf.set_xy(x, y0)
+            pdf.multi_cell(w, line_h, str(row.get(key, "")), border=0, fill=False)
+            x += w
+
+        pdf.set_y(y0 + row_h)
+        fill = not fill
+
+    pdf.output(str(output_path))
+    print(f"Saved contact log PDF → {output_path}")
+    return True
+
+
+# ---------------------------------------------------------------------------
+
 def _build_user_config(config: dict) -> dict:
     """Build the user_config dict passed to generate_emails_for_therapists."""
     lang_label = config["therapy_language_label"]
@@ -807,7 +903,8 @@ def main():
         print("  Before you proceed, make sure you have these documents")
         print("  ready to attach to the email:")
         print()
-        print("    1. Contact list (your busy_therapists.csv exported)")
+        print("    1. Contact log — this tool will generate output/contact_log.pdf")
+        print("       automatically when you press Enter below.")
         print("    2. PTV11 form with urgency label (from probationary sessions)")
         print("    3. Written confirmation from your private therapist")
         print("    4. Medical certificate of necessity (from your doctor)")
@@ -825,13 +922,19 @@ def main():
             extra["private_therapist_name"] = therapist_name
         if therapist_email:
             extra["private_therapist_email"] = therapist_email
+        pdf_path = output_dir / "contact_log.pdf"
+        pdf_ok = generate_responses_pdf(
+            csv_path=output_dir / "busy_therapists.csv",
+            output_path=pdf_path,
+            patient_name=config["patient_name"],
+        )
         run_insurance_option(
             config, base_dir, output_dir,
             template_name="insurance_application",
             html_path=output_dir / "insurance_application.html",
             extra_fields=extra if extra else None,
             attachments_note=(
-                "Contact list (busy_therapists.csv), "
+                f"{'output/contact_log.pdf' if pdf_ok else 'output/busy_therapists.csv (PDF generation failed — attach CSV instead)'}, "
                 "PTV11 form with urgency note, "
                 "confirmation from private therapist, "
                 "medical certificate of necessity"

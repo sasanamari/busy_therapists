@@ -45,7 +45,7 @@
 
 **Name**: Therapy Finder for Kostenerstattung
 **Purpose**: Automate the bureaucratic process of finding therapists and documenting contacts for German health insurance cost reimbursement (Kostenerstattung)
-**Status**: Core functionality complete. Menu-based flow wired end-to-end. Next: test all 8 menu options, then README + PyInstaller.
+**Status**: Core functionality complete. Documentation in progress (README done, guide partially done). Next: finish guide.md option references, then PyInstaller executable.
 **Tech Stack**: Python-first, terminal application, JSON data storage
 
 ---
@@ -247,29 +247,18 @@ busy_therapists/
 ✅ Dynamic language question in English email template
 ✅ docs/therapie_de_filter_params.md with English translations
 
-**Current status (2026-04-05):** Interactive menu fully implemented. Not yet tested end-to-end.
+**Current status (2026-04-14):** Documentation pass in progress. PDF contact log generation added. Repo cleaned up.
 
-**What was done in this session:**
-- Removed `protocol_generator.py` (over-engineered; contact CSVs serve as the contact log)
-- Written all 12 email templates (6 DE/EN pairs)
-- `main.py` fully refactored: interactive 8-option menu, no CLI flags
-- `generate_insurance_email()` added to `email_generator.py`
-- `generate_insurance_html()` added to `main.py` (single-card, mailto + Copy text button)
-- `pick_from_csv()` — lets user pick a therapist from an output CSV (options 5 and 7)
-- `save_contact_csv()` replaces `save_response_tracking_csv()` (serves all 3 contact CSVs)
-- `my_data.csv.example` updated with new optional insurance fields
-- `{max_wait_months}` removed — hardcoded to "3 months" in insurance_application template
-- Private/probationary therapist data removed from `my_data.csv` — comes from output CSVs
-- Everything is digital — no physical mail, mailto buttons on all options including 5–8
-
-**Uncommitted changes:** `CONTEXT_FOR_CLAUDE.md`, `main.py`, `src/email_generator.py`, `my_data.csv.example`, `templates/insurance_application.txt`, `templates/insurance_application_en.txt`
-
-**IMMEDIATE NEXT TASK: Test all 8 menu options end-to-end.**
-- Options 1–4: verify scraper runs, correct CSV/HTML written, correct template used, filter overrides correct
-- Options 5–8: verify placeholder substitution, mailto pre-filled, Copy button works, attachments note shown
-- Key thing to check: unfilled optional fields (e.g. `insurance_number`) should stay as `{insurance_number}` in the email body, not disappear
-
-**README:** `GUIDE_DRAFT.md` written and reviewed by user. Needs integrating into `README.md` after testing is done.
+**Recent work (this session):**
+- `README.md` — filled in all sections; removed Contributing and Legal & ethical notes
+- `docs/guide.md` — moved from `GUIDE_DRAFT.md`; added "How this works" section; added output CSV notes per step; updated Step 6 to reference `contact_log.pdf`
+- `docs/install_technical.md` — filled in all stubs; added output files table
+- `docs/my_data_reference.md` — fixed Email language (optional, not required); updated Therapist insurance note; resolved TODO link
+- `my_data.csv.example` — clarified Therapist insurance note (option 1 only)
+- `main.py` — added `generate_responses_pdf()`: generates `output/contact_log.pdf` using fpdf2 + bundled DejaVu fonts; called from option 5 before opening browser; warning prompt updated to tell user PDF will be generated
+- `src/fonts/` — DejaVuSans.ttf + DejaVuSans-Bold.ttf bundled for cross-platform Unicode support
+- `requirements.txt` — added `fpdf2>=2.7.0`
+- Repo cleanup: deleted test_*.py, user_config.*.json, generate_samples.py (moved to old_files/ or tests/); deleted empty data/ and tests/ dirs; added .DS_Store to .gitignore
 
 ---
 
@@ -305,14 +294,29 @@ Options 5–8 use `generate_insurance_html()` — single card with mailto + Copy
 
 **Next steps (in order):**
 
-### 1. Test all 8 menu options end-to-end (IMMEDIATE)
-Run each option and verify output. See "IMMEDIATE NEXT TASK" block above.
+### 1. Phase 4: Documentation (IN PROGRESS)
 
-### 2. Phase 4: Documentation
-- Integrate `GUIDE_DRAFT.md` into `README.md`
-- Add legal basis section (§13 Abs. 3 SGB V, BPtK endorsement)
-- Step-by-step usage instructions + responsible use policy
-- Mention `Insurance filter: kostenerstattung` for option 4
+**Done:** README.md, install_technical.md, my_data_reference.md, guide.md (partial)
+
+**Remaining:**
+- `docs/guide.md` — add explicit option numbers (option 1, option 2, etc.) to each step so users know which menu item to pick
+- `docs/install_nontechnical.md` — on hold until PyInstaller executable is built
+
+### 1b. Phase 4: Documentation (IMMEDIATE — was)
+Documentation structure is in place — next session should fill in content.
+
+**File structure:**
+- `README.md` — landing page (what it does, legal basis, two install paths). Has section stubs.
+- `docs/install_technical.md` — Python/conda install path. Has section stubs.
+- `docs/install_nontechnical.md` — download executable, fill CSV, double-click. Has section stubs.
+- `GUIDE_DRAFT.md` — step-by-step Kostenerstattung process guide. Well-written, needs light editing and possibly moving to `docs/guide.md`.
+- `docs/my_data_reference.md` — field-by-field reference for `my_data.csv`. Fully drafted, may just need a review pass.
+
+**Content guidelines:**
+- Target audience: mix of technical and non-technical. Non-technical users use the PyInstaller executable (not yet built) and should not need to know what Python is.
+- Keep technical install and non-technical install in separate files — don't mix them.
+- `GUIDE_DRAFT.md` is the most complete piece; use it as the primary source for the guide content.
+- README legal section: cite §13 Abs. 3 SGB V and BPtK endorsement (`docs/BPtK_Ratgeber_Kostenerstattung.pdf`). Keep it short — 3–4 sentences max.
 
 ### 3. Phase 2b: Additional Email Templates ✅ COMPLETE
 
