@@ -2,9 +2,11 @@ Betreff: Widerspruch gegen Ablehnungsbescheid vom {rejection_date} – {patient_
 
 Sehr geehrte Damen und Herren,
 
-hiermit lege ich Widerspruch gegen Ihr Schreiben vom {rejection_date} ein, mit dem Sie es ablehnen, die Kosten, die mir durch die ambulante Psychotherapie bei {private_therapist_name} entstehen, zu übernehmen. Meinem Antrag lagen die erforderlichen Unterlagen bei, aus denen hervorgeht, dass die Anspruchsvoraussetzungen vorliegen. Gemäß § 2 Abs. 1 SGB V sind Sie verpflichtet, mir eine rechtzeitige Versorgung zu gewährleisten. Da dies nicht erfolgt ist, besteht mein Anspruch auf Kostenerstattung nach § 13 Abs. 3 SGB V.
+hiermit lege ich Widerspruch gegen Ihr Schreiben vom {rejection_date} ein, mit dem Sie es ablehnen, die Kosten der ambulanten Psychotherapie bei {private_therapist_name} zu übernehmen.
 
-Ich bitte Sie deshalb erneut, meinen Antrag zu genehmigen. Sollten Sie dem Antrag nicht stattgeben, werde ich meinen Anspruch gerichtlich durchsetzen und die Aufsichtsbehörde sowie den Patientenbeauftragten der Bundesregierung informieren.
+Meinem Antrag lagen die erforderlichen Unterlagen bei, aus denen hervorgeht, dass die Anspruchsvoraussetzungen nach § 13 Abs. 3 SGB V vorliegen. Gemäß § 2 Abs. 1 SGB V sind Sie verpflichtet, mir eine rechtzeitige Versorgung zu gewährleisten – diese konnte ich trotz nachgewiesener Bemühungen über den Regelweg nicht erhalten. Mein Anspruch auf Kostenerstattung bleibt daher bestehen.
+
+Ich hoffe, dass Sie meinen Antrag nach erneuter Prüfung der Unterlagen genehmigen. Sollte der Widerspruch keinen Erfolg haben, werde ich meinen Anspruch gerichtlich durchsetzen und die Aufsichtsbehörde sowie den Patientenbeauftragten der Bundesregierung informieren.
 
 Mit freundlichen Grüßen
 {patient_name}
@@ -18,9 +20,11 @@ Subject: Formal Appeal against Rejection dated {rejection_date} – {patient_nam
 
 Dear Sir or Madam,
 
-I hereby lodge a formal appeal (Widerspruch) against your letter dated {rejection_date}, in which you declined to cover the costs arising from outpatient psychotherapy with {private_therapist_name}. My application included all required documents demonstrating that the conditions for reimbursement are met. Under § 2 Abs. 1 SGB V, you are legally obligated to ensure I receive timely care. As you have failed to do so, my entitlement to reimbursement under § 13 Abs. 3 SGB V stands.
+I am writing to formally appeal your decision dated {rejection_date} to decline coverage for outpatient psychotherapy with {private_therapist_name}.
 
-I therefore ask you once again to approve my application. Should you not do so, I will pursue my claim through legal channels and notify the supervisory authority (Aufsichtsbehörde) as well as the Federal Patient Commissioner (Patientenbeauftragter der Bundesregierung).
+My application included all required documents demonstrating that the conditions for reimbursement under § 13 Abs. 3 SGB V are met. Under § 2 Abs. 1 SGB V, you are obligated to ensure I receive timely access to care — something I was unable to achieve through the standard route despite extensive documented efforts. My entitlement to reimbursement therefore stands.
+
+I hope you will reconsider upon reviewing the documentation. Should the appeal be unsuccessful, I will have no choice but to pursue the matter through legal channels and notify the supervisory authority (Aufsichtsbehörde) as well as the Federal Patient Commissioner (Patientenbeauftragter der Bundesregierung).
 
 Kind regards,
 {patient_name}
