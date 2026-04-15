@@ -1,6 +1,6 @@
-# Busy Therapists — Kostenerstattung Tool
+# DON'T PANIC — your Hitchhiker's Guide to finding a therapist in Germany
 
-> A tool to help people in Germany find therapists and build the documentation needed to apply for cost reimbursement (Kostenerstattung) from their public health insurance.
+> The German healthcare bureaucracy is, if not exactly friendly, mostly traversable. The is a tool to help people in Germany find therapists and build the documentation needed to apply for cost reimbursement (Kostenerstattung) from their public health insurance. You don't need a lawyer, you don't need to speak German, and you don't need to figure it all out at once. Just follow the steps.
 
 ---
 

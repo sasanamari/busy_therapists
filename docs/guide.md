@@ -13,7 +13,7 @@ Finding a free spot for therapy in Germany is tricky, and it can be even more di
   - **Python users:** `python main.py` in the project folder
   - **Everyone else:** double-click the app
 - The tool either searches for therapists and opens an HTML file with ready-to-send emails, or generates a letter for your insurance
-- Option 1 uses your filters freely, while other options ignore certain filters because the process requires it (e.g. option 3 always looks for busy therapists regardless of your availability setting)
+- Option 1 uses your filters freely, while other options ignore certain filters because the process requires it (e.g. option 4 always looks for busy therapists regardless of your availability setting)
 
 ---
 
@@ -41,19 +41,47 @@ Use this tool to search for therapists near you who accept your insurance and ha
 - Run the tool and send the emails it generates either by clicking on the email link or copy and pasting the email content.
 - If a therapist replies and it feels like a good match — you're done. Congrats! 
 
-Contacts are saved to `output/busy_therapists.csv`. To start fresh, delete that file before running again.
+Contacts are saved to `output/busy_therapists.csv`. If you want to start from scratch, delete that file before running again.
 
 If this doesn't work out (long waiting lists, no replies), continue below.
 
 ---
 
-## Step 2: Get your PTV11 form
+## Step 2: Find a private therapist
+
+Start looking for a private therapist you actually want to work with. They need to meet two criteria:
+
+1. **Licensed in one of these approved methods** (Richtlinienverfahren):
+   - Behavioural therapy (Verhaltenstherapie)
+   - Depth psychology (Tiefenpsychologisch fundierte Psychotherapie)
+   - Psychoanalysis (Analytische Psychotherapie)
+
+2. **Willing to handle the Kostenerstattung paperwork** — not all private therapists are, so ask explicitly
+
+To search, run the main file and choose **option 2: Find a private therapist (Kostenerstattung)**.
+
+- This option searches therapie.de for therapists who accept Kostenerstattung and have availability soon, near the zip code you set in `my_data.csv`
+- It uses the **private therapist inquiry email template**, which asks the therapist to confirm both criteria above in writing
+- Your other filters (language, gender, therapy method) are respected — this is someone you'll actually be working with, so finding a good fit matters
+
+Note that therapie.de's Kostenerstattung filter is not exhaustive — not all willing therapists are listed there. If you don't find someone suitable, try searching on [complicated.life](https://complicated.life), Google, or other directories, and use the same email template to ask them directly whether they're willing to work with Kostenerstattung.
+
+Contacts are saved to `output/private_therapists.csv`. To start fresh, delete that file before running again.
+
+Once you've found someone promising, see them for 1–2 sessions to make sure it feels right. Note: these initial sessions may or may not be reimbursed later — you may need to pay for them out of pocket for now.
+
+**Ask your private therapist** what forms your GP will need to fill in — they may have specific forms for you to bring to the GP appointment.
+
+---
+
+## Step 3: Get your PTV11 form
 
 This is the most important document for your reimbursement application. It comes from a **probationary session** (Probatorische Sitzung) with a public insurance therapist — just 1–3 sessions, much easier to get an appointment for than full therapy.
 
-**How to find someone:**
-- Run the tool with **Insurance filter** set to `public`, and no availability filter
-- Use the probationary session email template. It mentions explicitly in your email that you need the PTV11 form with an urgency sticker for a Kostenerstattung application
+To find a therapist for this step, run the main file and choose **option 3: Request probationary sessions (to get PTV11 + urgency note)**.
+
+- This option searches for therapists with **public insurance**, without filtering for availability — availability filters apply to ongoing therapy slots, not probationary sessions
+- It uses the **probationary session email template**, which explicitly states that you need the PTV11 form with an urgency sticker for a Kostenerstattung application
 
 Contacts are saved to `output/probationary_therapists.csv`. To start fresh, delete that file before running again.
 
@@ -69,47 +97,23 @@ The therapist will assess you and fill in the PTV11 with a pre-diagnosis, and an
 
 ---
 
-## Step 3: Build your rejection list
+## Step 4: Build your rejection list
 
-You need to show your insurer that you contacted at least 20 public therapists and none could see you within a reasonable time. **This runs in parallel with Steps 2 and 4** — start as early as possible.
+You need to show your insurer that you contacted at least 20 public therapists and none could see you within a reasonable time. **Do this last among steps 2–4** — you want the waiting times to be as recent as possible when you apply.
 
-For this step, keep the filters simple. You only need:
-- Your **zip code** (for proximity)
-- **Insurance filter**: `public`
-- **Availability**: `over 3 months` or `over 12 months`
+Run the main file and choose **option 4: Contact public therapists for insurance documentation**.
 
-You don't need to filter by language, gender, or therapy method — legally, availability is what matters here, not whether the therapist would have been a perfect match.
+- This option always searches for therapists with **public insurance** and long wait times, near the zip code you set in `my_data.csv`. The other filters (language, gender, therapy method) are ignored to maximise the number of contacts. The number of therapists to contact is also set in `my_data.csv` — 20–30 is recommended.
+- It uses the same **therapy request email template** as option 1, and appends results to `output/busy_therapists.csv` — so your contact list from step 1 carries over. To start from scratch, delete that file before running.
+
+You don't need to filter by language, gender, or therapy method — legally, availability is what matters, not whether the therapist would have been a perfect match.
 
 - Contact at least **20 therapists** — more is better if you want to move faster
-- Track all responses in the `responses.csv` file the tool generates: dates, replies, waiting times
 - No reply is also valid, but give it 1–2 weeks before counting it
 - Contact a few extra upfront if you'd rather not wait on stragglers
-- If you already kept a log from therapists that turned you down in step 1, you may add them to `responses.csv`
+- If therapists already turned you down in step 1, they count too — they're already in `output/busy_therapists.csv`
 
-Contacts are saved to `output/busy_therapists.csv` — the same file as option 1, so your full list stays in one place. To start over, delete that file. Track responses manually in `output/responses.csv` as replies come in. When you run option 5, the tool automatically converts this into a formatted PDF (`output/contact_log.pdf`) ready to attach to your insurance application.
-
----
-
-## Step 4: Find a private therapist
-
-Start looking for a private therapist you actually want to work with. They need to meet two criteria:
-
-1. **Licensed in one of these approved methods** (Richtlinienverfahren):
-   - Behavioural therapy (Verhaltenstherapie)
-   - Depth psychology (Tiefenpsychologisch fundierte Psychotherapie)
-   - Psychoanalysis (Analytische Psychotherapie)
-
-2. **Willing to handle the Kostenerstattung paperwork** — not all private therapists are, so ask explicitly
-
-**How to search:**
-- Set **Insurance filter** to `kostenerstattung` in `my_data.csv` — therapie.de has a filter for this (not always up to date, but a good starting point). If you don't find a good therapist, you may also reach out to therapists who work with private health insurance and ask them in your email whether they are willing to work with `kostenerstattung`.
-- Use the private therapist inquiry email template, which covers both criteria above
-
-Contacts are saved to `output/private_therapists.csv`. To start fresh, delete that file before running again.
-
-Once you've found someone promising, see them for 1–2 sessions to make sure it feels right. Note: these initial sessions may or may not be reimbursed later — you may need to pay for them out of pocket for now.
-
-**Ask your private therapist** what forms your GP will need to fill in — they may have specific forms for you to bring to the GP appointment.
+Track responses manually in `output/responses.csv` as replies come in. When you run option 5, the tool converts this into a formatted PDF (`output/contact_log.pdf`) ready to attach to your insurance application.
 
 ---
 
@@ -125,18 +129,20 @@ This is straightforward — tell them you've been struggling (depression, anxiet
 
 ## Step 6: Submit your application
 
-Once you have everything, send it to your health insurance (Krankenkasse):
+Run **option 5: Apply for reimbursement** to generate the insurance application email and `output/contact_log.pdf` automatically.
 
+Before running, make sure `my_data.csv` has your **Insurance email** filled in — the letter will be addressed there. The tool will then ask you to select your private therapist from the list built in step 2, or enter their name and email manually if you found them outside the tool.
+
+Once you have everything, attach the following to the email before sending:
+
+- ✅ Contact log (`output/contact_log.pdf`)
 - ✅ PTV11 form with urgency sticker
-- ✅ Contact log (`output/contact_log.pdf`) — generated automatically when you run option 5
 - ✅ Confirmation from your private therapist (licensed method + willingness to do paperwork)
 - ✅ Ärztliche Notwendigkeitsbescheinigung + Konsiliarbericht from your GP
 
-Use the insurance application letter template (template 4) as your cover letter.
-
 **How to submit:**
 - Email is a good first step
-- If there's a branch office near you, a **personal visit** is worth it — harder to ignore than an email, and less stressful than a phone call
+- If there's a branch office near you, a **personal visit** is worth it — harder to ignore than an email, and perhaps less stressful than a phone call. Although, an email is technically sufficient. 
 
 ---
 
@@ -144,8 +150,8 @@ Use the insurance application letter template (template 4) as your cover letter.
 
 Your insurer should respond within about a month. If they don't:
 
-1. **~4 weeks with no reply:** Send the follow-up email template asking for a status update
-2. **~5 weeks, still nothing:** Send the legal threat template
-3. **Application rejected:** Send the Widerspruch (formal objection) template
+1. **~4 weeks with no reply:** Run **option 6: Follow up** — make sure **Application date** is filled in `my_data.csv` (the date you sent your application)
+2. **~5 weeks, still nothing:** Run **option 8: Legal threat** — requires both **Application date** and **Follow-up date** in `my_data.csv`
+3. **Application rejected:** Run **option 7: Appeal a rejection** — requires **Rejection date** in `my_data.csv` (the date on the rejection letter). The tool will also ask you to confirm your private therapist, same as in step 6.
 
 > You don't need a lawyer. Silence and rejection are standard tactics insurers use to discourage costly claims. A firm, formal response is almost always enough when your paperwork is complete.

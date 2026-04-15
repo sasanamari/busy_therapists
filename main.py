@@ -781,14 +781,14 @@ MENU = """
   ─────────────────────────────────────────────────────────────────────────
   1   Search for therapists + send           my_data.csv
       outreach emails
-  2   Request probationary sessions          my_data.csv
-      (to get PTV11 + urgency note)
-  3   Contact public therapists for          my_data.csv
-      insurance documentation
-  4   Find a private therapist               my_data.csv
+  2   Find a private therapist               my_data.csv
       (Kostenerstattung)
+  3   Request probationary sessions          my_data.csv
+      (to get PTV11 + urgency note)
+  4   Contact public therapists for          my_data.csv
+      insurance documentation
   5   Apply for reimbursement                my_data.csv + private_therapists.csv
-                                             (run option 4 first)
+                                             (run option 2 first)
   6   Follow up — no response from           my_data.csv
       insurance                              (Application date field filled in)
   7   Appeal a rejection                     my_data.csv + private_therapists.csv
@@ -851,6 +851,21 @@ def main():
         )
 
     elif choice == "2":
+        # Private therapist search — always kostenerstattung insurance, "yes" availability
+        # cascade (available now → up to 3 months, expanding to 25km if needed).
+        # Language, focus, format, gender respected from CSV.
+        run_scraper_option(
+            config, base_dir, output_dir, data_dir,
+            emails_dir=output_dir / "private_emails",
+            template_name="private_inquiry",
+            csv_path=output_dir / "private_therapists.csv",
+            html_path=output_dir / "private_emails.html",
+            warnings=warnings,
+            insurance_override=INSURANCE_MAP["kostenerstattung"],
+            stages_override=_build_availability_stages("yes"),
+        )
+
+    elif choice == "3":
         # Probationary sessions — always public insurance, no availability filter.
         # Language, focus, format, gender respected from CSV.
         run_scraper_option(
@@ -864,7 +879,7 @@ def main():
             stages_override=[(None, None), (None, 25)],
         )
 
-    elif choice == "3":
+    elif choice == "4":
         # Documentation search — always public insurance, long wait times cascade.
         # Language, focus, format, gender intentionally ignored: the goal is to
         # document as many contacts as possible, not find the ideal therapist.
@@ -881,21 +896,6 @@ def main():
             focus_override=None,
             therapy_type_override=None,
             gender_override=None,
-        )
-
-    elif choice == "4":
-        # Private therapist search — always kostenerstattung insurance, "yes" availability
-        # cascade (available now → up to 3 months, expanding to 25km if needed).
-        # Language, focus, format, gender respected from CSV.
-        run_scraper_option(
-            config, base_dir, output_dir, data_dir,
-            emails_dir=output_dir / "private_emails",
-            template_name="private_inquiry",
-            csv_path=output_dir / "private_therapists.csv",
-            html_path=output_dir / "private_emails.html",
-            warnings=warnings,
-            insurance_override=INSURANCE_MAP["kostenerstattung"],
-            stages_override=_build_availability_stages("yes"),
         )
 
     elif choice == "5":
