@@ -264,7 +264,7 @@ busy_therapists/
 - Build works: `mamba run -n busy_therapists pyinstaller busy_therapists.spec --clean -y`
 - App launches via `Run Therapy Finder.command` (double-click in Finder → opens Terminal)
 - `_runtime_dir()` resolves to the folder containing the `.app` (where `my_data.csv` lives)
-- **Current bug**: when user edits `my_data.csv` in Numbers and exports as CSV, all required fields show as missing/empty. Likely a CSV encoding or BOM issue from Numbers export. Need to investigate `read_config()` in `main.py` — check if it handles BOM (`utf-8-sig`) or different line endings from Numbers.
+- **CSV parsing fixed**: Numbers exports with semicolons (German locale) + BOM + Windows line endings. Fixed in `read_config()` — now uses `utf-8-sig` encoding and auto-detects delimiter by peeking at first line. App now reads Numbers-exported CSVs correctly.
 - macOS UX notes: Numbers tries to save as `.numbers` — user must use File → Export To → CSV. Need to document this in `install_nontechnical.md`.
 - `.command` file stays open showing `[Process completed]` — user closes with Cmd+W. Acceptable behaviour, document it.
 

@@ -126,8 +126,11 @@ GENDER_MAP = {
 def read_config(csv_path: Path) -> dict:
     """Read my_data.csv into a dict of {field: value}. Skips header row."""
     config = {}
-    with open(csv_path, "r", encoding="utf-8") as f:
-        reader = csv.reader(f)
+    with open(csv_path, "r", encoding="utf-8-sig", newline="") as f:
+        sample = f.read(1024)
+        f.seek(0)
+        delimiter = ";" if ";" in sample.split("\n")[0] else ","
+        reader = csv.reader(f, delimiter=delimiter)
         next(reader)  # skip header row (Field, Your data, Notes)
         for row in reader:
             if len(row) >= 2:
