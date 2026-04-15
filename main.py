@@ -15,8 +15,31 @@ import webbrowser
 from datetime import date, datetime
 from pathlib import Path
 
+# When frozen by PyInstaller, bundled files live in sys._MEIPASS.
+# my_data.csv and output/ always live next to the executable.
+def _bundle_dir() -> Path:
+    """Path to bundled read-only assets (templates, src, fonts)."""
+    if getattr(sys, "frozen", False):
+        return Path(sys._MEIPASS)
+    return Path(__file__).parent
+
+def _runtime_dir() -> Path:
+    """Path to the executable's directory — where my_data.csv and output/ live."""
+    if getattr(sys, "frozen", False):
+        exe = Path(sys.executable)
+        # Inside a .app bundle the executable is at
+        # SomeApp.app/Contents/MacOS/exe — go up to the folder containing the .app
+        for parent in exe.parents:
+            if parent.suffix == ".app":
+                return parent.parent
+        return exe.parent
+    return Path(__file__).parent
+
+BUNDLE_DIR = _bundle_dir()
+RUNTIME_DIR = _runtime_dir()
+
 # Make src/ importable regardless of where the script is called from
-sys.path.insert(0, str(Path(__file__).parent / "src"))
+sys.path.insert(0, str(BUNDLE_DIR / "src"))
 
 from scraper import collect_therapists, save_therapists_to_json
 from email_generator import generate_emails_for_therapists, save_emails_to_json, generate_insurance_email
@@ -565,7 +588,7 @@ def generate_responses_pdf(csv_path: Path, output_path: Path, patient_name: str)
     pdf = FPDF(orientation="L", unit="mm", format="A4")
     pdf.add_page()
     pdf.set_margins(12, 12, 12)
-    font_dir = Path(__file__).parent / "src" / "fonts"
+    font_dir = BUNDLE_DIR / "src" / "fonts"
     pdf.add_font("DejaVu", style="", fname=str(font_dir / "DejaVuSans.ttf"))
     pdf.add_font("DejaVu", style="B", fname=str(font_dir / "DejaVuSans-Bold.ttf"))
 
@@ -804,9 +827,9 @@ MENU = """
 # ---------------------------------------------------------------------------
 
 def main():
-    base_dir = Path(__file__).parent
-    csv_path = base_dir / "my_data.csv"
-    output_dir = base_dir / "output"
+    base_dir = BUNDLE_DIR
+    csv_path = RUNTIME_DIR / "my_data.csv"
+    output_dir = RUNTIME_DIR / "output"
     data_dir = output_dir / ".data"
 
     print("=" * 60)

@@ -45,7 +45,7 @@
 
 **Name**: Therapy Finder for Kostenerstattung
 **Purpose**: Automate the bureaucratic process of finding therapists and documenting contacts for German health insurance cost reimbursement (Kostenerstattung)
-**Status**: Core functionality complete. Documentation in progress (README done, guide partially done). Next: finish guide.md option references, then PyInstaller executable.
+**Status**: Core functionality complete. Documentation complete. PyInstaller build in progress — app launches but CSV parsing bug under investigation.
 **Tech Stack**: Python-first, terminal application, JSON data storage
 
 ---
@@ -254,9 +254,19 @@ busy_therapists/
 - `docs/guide.md` — complete; explicit option numbers per step, CSV field requirements, step order changed (private therapist → PTV11 → rejection list)
 - `docs/install_technical.md` — complete
 - `docs/my_data_reference.md` — complete
-- `main.py` — menu options 2-4 reordered to match guide; `generate_responses_pdf()` added (fpdf2 + DejaVu fonts)
+- `main.py` — menu options 2-4 reordered to match guide; `generate_responses_pdf()` added (fpdf2 + DejaVu fonts); PyInstaller path helpers added (`_bundle_dir()`, `_runtime_dir()`)
 - `src/fonts/` — DejaVuSans bundled for cross-platform Unicode PDF support
 - `requirements.txt` — added `fpdf2>=2.7.0`
+- `busy_therapists.spec` — PyInstaller spec file created (onedir + .app bundle mode)
+- `dist/Run Therapy Finder.command` — launcher script for non-technical macOS users
+
+**PyInstaller status (IN PROGRESS):**
+- Build works: `mamba run -n busy_therapists pyinstaller busy_therapists.spec --clean -y`
+- App launches via `Run Therapy Finder.command` (double-click in Finder → opens Terminal)
+- `_runtime_dir()` resolves to the folder containing the `.app` (where `my_data.csv` lives)
+- **Current bug**: when user edits `my_data.csv` in Numbers and exports as CSV, all required fields show as missing/empty. Likely a CSV encoding or BOM issue from Numbers export. Need to investigate `read_config()` in `main.py` — check if it handles BOM (`utf-8-sig`) or different line endings from Numbers.
+- macOS UX notes: Numbers tries to save as `.numbers` — user must use File → Export To → CSV. Need to document this in `install_nontechnical.md`.
+- `.command` file stays open showing `[Process completed]` — user closes with Cmd+W. Acceptable behaviour, document it.
 
 ---
 
@@ -295,9 +305,15 @@ Options 5–8 use `generate_insurance_html()` — single card with mailto + Copy
 **Done:** README.md, install_technical.md, my_data_reference.md, guide.md
 
 **Remaining:**
-- `docs/install_nontechnical.md` — on hold until PyInstaller executable is built
+- `docs/install_nontechnical.md` — needs writing once PyInstaller is stable
 
-### 2. Phase 6: PyInstaller executable
+### 2. Phase 6: PyInstaller executable (IN PROGRESS)
+- Fix Numbers CSV export bug (BOM/encoding issue in `read_config()`)
+- Test full flow end-to-end with a real zip code
+- Add `my_data.csv.example` to `dist/` for distribution
+- Zip `dist/` contents and upload to GitHub releases
+- Write `docs/install_nontechnical.md`
+- Later: Windows `.exe` build on Windows 10 machine
 Documentation structure is in place — next session should fill in content.
 
 **File structure:**
