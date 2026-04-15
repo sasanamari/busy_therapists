@@ -247,26 +247,22 @@ busy_therapists/
 ✅ Dynamic language question in English email template
 ✅ docs/therapie_de_filter_params.md with English translations
 
-**Current status (2026-04-14):** Documentation pass in progress. PDF contact log generation added. Repo cleaned up.
+**Current status (2026-04-15):** Documentation nearly complete. PDF contact log done. Repo clean.
 
-**Recent work (this session):**
-- `README.md` — filled in all sections; removed Contributing and Legal & ethical notes
-- `docs/guide.md` — moved from `GUIDE_DRAFT.md`; added "How this works" section; added output CSV notes per step; updated Step 6 to reference `contact_log.pdf`
-- `docs/install_technical.md` — filled in all stubs; added output files table
-- `docs/my_data_reference.md` — fixed Email language (optional, not required); updated Therapist insurance note; resolved TODO link
-- `my_data.csv.example` — clarified Therapist insurance note (option 1 only)
-- `main.py` — added `generate_responses_pdf()`: generates `output/contact_log.pdf` using fpdf2 + bundled DejaVu fonts; called from option 5 before opening browser; warning prompt updated to tell user PDF will be generated
-- `src/fonts/` — DejaVuSans.ttf + DejaVuSans-Bold.ttf bundled for cross-platform Unicode support
+**Recent work:**
+- `README.md` — complete; HHGTTG "DON'T PANIC" title
+- `docs/guide.md` — complete; explicit option numbers per step, CSV field requirements, step order changed (private therapist → PTV11 → rejection list)
+- `docs/install_technical.md` — complete
+- `docs/my_data_reference.md` — complete
+- `main.py` — menu options 2-4 reordered to match guide; `generate_responses_pdf()` added (fpdf2 + DejaVu fonts)
+- `src/fonts/` — DejaVuSans bundled for cross-platform Unicode PDF support
 - `requirements.txt` — added `fpdf2>=2.7.0`
-- Repo cleanup: deleted test_*.py, user_config.*.json, generate_samples.py (moved to old_files/ or tests/); deleted empty data/ and tests/ dirs; added .DS_Store to .gitignore
 
 ---
 
 ## 🐛 Known Issues / To Fix
 
-- **Kostenerstattung filter undocumented in README**: `Insurance filter: kostenerstattung` is implemented (maps to ID 6). README should mention it as the recommended filter for option 4 (private therapist search). therapie.de data for this filter may be incomplete — users should confirm with the therapist directly.
-
-- **Insurance type not wired to scraper**: `my_data.csv` has an `Insurance type` field (public/private) used in email text, but it does NOT automatically set the scraper's insurance filter. The scraper uses the separate `Insurance filter` field. A user with public insurance who leaves `Insurance filter` blank won't get filtered results — they need to also set `Insurance filter: public`. These two fields could be merged or one could auto-set the other. Deferred until README is written.
+None outstanding.
 
 ---
 
@@ -279,9 +275,9 @@ busy_therapists/
 | # | Template | Scraper? | CSV written | HTML opened |
 |---|---|---|---|---|
 | 1 | `therapy_request` | ✅ user filters | `busy_therapists.csv` | `emails.html` |
-| 2 | `probationary_request` | ✅ public, no avail. filter | `probationary_therapists.csv` | `probationary_emails.html` |
-| 3 | `therapy_request` | ✅ public, avail=over 3mo | `busy_therapists.csv` | `emails.html` |
-| 4 | `private_inquiry` | ✅ kostenerstattung | `private_therapists.csv` | `private_emails.html` |
+| 2 | `private_inquiry` | ✅ kostenerstattung | `private_therapists.csv` | `private_emails.html` |
+| 3 | `probationary_request` | ✅ public, no avail. filter | `probationary_therapists.csv` | `probationary_emails.html` |
+| 4 | `therapy_request` | ✅ public, avail=over 3mo | `busy_therapists.csv` | `emails.html` |
 | 5 | `insurance_application` | ❌ | — | `insurance_application.html` |
 | 6 | `insurance_followup` | ❌ | — | `insurance_followup.html` |
 | 7 | `appeal_rejection` | ❌ | — | `appeal_rejection.html` |
@@ -294,15 +290,14 @@ Options 5–8 use `generate_insurance_html()` — single card with mailto + Copy
 
 **Next steps (in order):**
 
-### 1. Phase 4: Documentation (IN PROGRESS)
+### 1. Phase 4: Documentation (NEARLY DONE)
 
-**Done:** README.md, install_technical.md, my_data_reference.md, guide.md (partial)
+**Done:** README.md, install_technical.md, my_data_reference.md, guide.md
 
 **Remaining:**
-- `docs/guide.md` — add explicit option numbers (option 1, option 2, etc.) to each step so users know which menu item to pick
 - `docs/install_nontechnical.md` — on hold until PyInstaller executable is built
 
-### 1b. Phase 4: Documentation (IMMEDIATE — was)
+### 2. Phase 6: PyInstaller executable
 Documentation structure is in place — next session should fill in content.
 
 **File structure:**
