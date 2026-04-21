@@ -55,3 +55,4 @@ credentials.json
 old_files/
 my_data.csv
 .DS_Store
+CONTEXT_FOR_CLAUDE.md
