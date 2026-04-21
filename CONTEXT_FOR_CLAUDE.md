@@ -12,32 +12,56 @@
 - Tested end-to-end with real therapie.de data
 
 ### Phase 2: Email Templates ✅
-- All 12 templates written (6 DE/EN pairs): `therapy_request`, `probationary_request`, `private_inquiry`, `insurance_application`, `insurance_followup`, `appeal_rejection`, `appeal_ignored`
+- All 14 templates written (7 DE/EN pairs): `therapy_request`, `probationary_request`, `private_inquiry`, `insurance_application`, `insurance_followup`, `appeal_rejection`, `appeal_ignored`
 - Mail merge via `src/email_generator.py` — placeholder replacement, language detection, optional diagnosis field
 - `generate_insurance_email()` added for insurance letters (no therapist — fills from config, unfilled placeholders stay visible)
 - Insurance/appeal templates cite § 2 Abs. 1 + § 13 Abs. 3 SGB V; EN versions are DE + EN side by side
 
-### Phase 2b: Interactive menu + full wiring ✅ (2026-04-05)
+### Phase 2b: Interactive menu + full wiring ✅
 - `main.py` refactored to interactive numbered menu (8 options) — no CLI flags
 - Options 1–4: scraper-based (therapist outreach), each writes to its own CSV and HTML
 - Options 5–8: insurance letters (no scraper), single-card HTML with mailto + "Copy text" button
 - `run_scraper_option()` shared helper with sentinel-based filter overrides
 - `run_insurance_option()` shared helper for insurance letters
-- `pick_from_csv()` — reads a contact CSV, shows numbered list, user picks therapist (used by options 5 and 7 to fill `{private_therapist_name}`)
-- `save_contact_csv()` (renamed from `save_response_tracking_csv`) — serves all 3 contact CSVs
+- `pick_from_csv()` — reads a contact CSV, shows numbered list, user picks therapist (used by options 5 and 7)
+- `save_contact_csv()` — serves all 3 contact CSVs
 - `generate_insurance_html()` — single-card HTML with mailto + JS clipboard copy button
 
 ### Search filters ✅
 - All therapie.de filter params wired: availability, insurance, foreign language, therapy format, focus/topic, therapist gender
 - Human-readable CSV values mapped to numeric IDs via lookup dicts in `main.py`
 - Unrecognised filter values print a warning at startup AND at the end of the run
-- `terminzeitraum` bug fixed: `4` = "wait over 12 months" (not "available now"); `1` = available now
 - Full param reference with English translations: `docs/therapie_de_filter_params.md`
 
-### my_data.csv optional fields ✅
-- Added: `Insurance number`, `Insurance email`, `Application date`, `Follow-up date`, `Rejection date`
-- All optional — if empty, placeholder stays in the email for manual editing before sending
-- Private/probationary therapist info is NOT in my_data.csv — comes from output CSVs instead
+### my_data config ✅
+- Supports both `my_data.csv` and `my_data.numbers` — `.numbers` takes priority if both exist
+- `read_config()` auto-detects delimiter (comma vs semicolon), handles BOM (`utf-8-sig`), converts Numbers float values to clean strings
+- `main()` accepts either file — only errors if neither exists
+- Prints which file is being used on startup
+- Optional fields: `Insurance number`, `Insurance email`, `Application date`, `Follow-up date`, `Rejection date`
+- `numbers-parser>=4.0.0` added to `requirements.txt`
+
+### Phase 4: Documentation ✅ (nearly)
+- `README.md` — complete; "DON'T PANIC" HHGTTG title
+- `docs/guide.md` — complete; step-by-step Kostenerstattung process, explicit option numbers, Numbers app instructions
+- `docs/install_technical.md` — complete
+- `docs/my_data_reference.md` — complete
+- `docs/therapie_de_filter_params.md` — complete
+- `docs/screenshots/` — 6 screenshots for install_nontechnical.md (01–06)
+- `docs/install_nontechnical.md` — **FILE EXISTS BUT STILL EMPTY — needs writing**
+
+### Phase 6: PyInstaller build ✅
+- Build works: `mamba run -n busy_therapists pyinstaller busy_therapists.spec --clean -y`
+- macOS Apple Silicon only (arm64) — Intel Mac and Windows builds deferred
+- `dist/Run Therapy Finder.command` — launcher script; includes `xattr -dr com.apple.quarantine` to strip macOS quarantine from `.app` before launch (one-time System Settings approval needed for the `.command` itself)
+- `_bundle_dir()` / `_runtime_dir()` path helpers handle frozen vs dev paths
+- `my_data.csv` lives next to the executable (outside bundle); `templates/` and `src/` bundled as data
+- `dist/` currently contains: `busy_therapists.app`, `busy_therapists/` (internal), `Run Therapy Finder.command`, `my_data.csv.example`
+- GitHub release v1.0.0 created (repo still private): `TherapyFinder_macOS.zip` uploaded
+
+### Repo cleanup ✅
+- Removed: `DECISIONS.md`, `PROJECT_PLAN.md`, `SETUP.md`, `samples/`, `tests/`
+- Added to `.gitignore`: `build/`, `*.zip`, `dist_test/`
 
 ---
 
@@ -45,7 +69,7 @@
 
 **Name**: Therapy Finder for Kostenerstattung
 **Purpose**: Automate the bureaucratic process of finding therapists and documenting contacts for German health insurance cost reimbursement (Kostenerstattung)
-**Status**: Core functionality complete. Documentation complete. PyInstaller build in progress — app launches but CSV parsing bug under investigation.
+**Status**: Core functionality complete. PyInstaller build complete (macOS Apple Silicon). GitHub release v1.0.0 created (repo still private). Remaining: write `install_nontechnical.md`, decide what to do with `CONTEXT_FOR_CLAUDE.md`, make repo public.
 **Tech Stack**: Python-first, terminal application, JSON data storage
 
 ---
@@ -247,26 +271,24 @@ busy_therapists/
 ✅ Dynamic language question in English email template
 ✅ docs/therapie_de_filter_params.md with English translations
 
-**Current status (2026-04-15):** Documentation nearly complete. PDF contact log done. Repo clean.
+**Current status (2026-04-21):** PyInstaller build complete. GitHub release v1.0.0 uploaded (private repo). Repo cleaned up. Remaining: write `install_nontechnical.md`, handle `CONTEXT_FOR_CLAUDE.md`, make repo public.
 
-**Recent work:**
-- `README.md` — complete; HHGTTG "DON'T PANIC" title
-- `docs/guide.md` — complete; explicit option numbers per step, CSV field requirements, step order changed (private therapist → PTV11 → rejection list)
-- `docs/install_technical.md` — complete
-- `docs/my_data_reference.md` — complete
-- `main.py` — menu options 2-4 reordered to match guide; `generate_responses_pdf()` added (fpdf2 + DejaVu fonts); PyInstaller path helpers added (`_bundle_dir()`, `_runtime_dir()`)
-- `src/fonts/` — DejaVuSans bundled for cross-platform Unicode PDF support
-- `requirements.txt` — added `fpdf2>=2.7.0`
-- `busy_therapists.spec` — PyInstaller spec file created (onedir + .app bundle mode)
-- `dist/Run Therapy Finder.command` — launcher script for non-technical macOS users
+**Recent work (2026-04-21):**
+- `main.py` — `read_config()` now reads `my_data.numbers` directly (numbers-parser); `main()` accepts either file; prints which file is used; menu option 8 renamed to "Threat of legal action"
+- `requirements.txt` — added `numbers-parser>=4.0.0`
+- `docs/guide.md` — added macOS Numbers instructions
+- `docs/screenshots/` — 6 screenshots added for install guide
+- `dist/Run Therapy Finder.command` — added `xattr -dr com.apple.quarantine` to strip quarantine from `.app` on first run
+- `busy_therapists.spec` — rebuilt; macOS Apple Silicon (arm64) only
+- GitHub release v1.0.0 created with `TherapyFinder_macOS.zip`
+- Removed: `DECISIONS.md`, `PROJECT_PLAN.md`, `SETUP.md`, `samples/`, `tests/`
 
-**PyInstaller status (IN PROGRESS):**
-- Build works: `mamba run -n busy_therapists pyinstaller busy_therapists.spec --clean -y`
-- App launches via `Run Therapy Finder.command` (double-click in Finder → opens Terminal)
-- `_runtime_dir()` resolves to the folder containing the `.app` (where `my_data.csv` lives)
-- **CSV parsing fixed**: Numbers exports with semicolons (German locale) + BOM + Windows line endings. Fixed in `read_config()` — now uses `utf-8-sig` encoding and auto-detects delimiter by peeking at first line. App now reads Numbers-exported CSVs correctly.
-- macOS UX notes: Numbers tries to save as `.numbers` — user must use File → Export To → CSV. Need to document this in `install_nontechnical.md`.
-- `.command` file stays open showing `[Process completed]` — user closes with Cmd+W. Acceptable behaviour, document it.
+**macOS security UX (important for install_nontechnical.md):**
+- Double-clicking `Run Therapy Finder.command` → blocked ("Apple could not verify...")
+- Go to System Settings → Privacy & Security → "Open Anyway" → password prompt → runs
+- The `.command` script then strips quarantine from `busy_therapists.app` automatically
+- One-time only — works normally after that
+- `.command` window stays open with `[Process completed]` after exit — close with Cmd+W
 
 ---
 
@@ -300,34 +322,28 @@ Options 5–8 use `generate_insurance_html()` — single card with mailto + Copy
 
 **Next steps (in order):**
 
-### 1. Phase 4: Documentation (NEARLY DONE)
+### 1. Write `docs/install_nontechnical.md` ← NEXT TASK
+- Screenshots are in `docs/screenshots/` (01_folder_contents through 06_app_running)
+- Release zip is at: https://github.com/sasanamari/busy_therapists/releases/tag/v1.0.0
+- Cover: download zip, unzip, rename `my_data.csv.example` → `my_data.csv` (or open in Numbers), fill in data, double-click `Run Therapy Finder.command`, handle the one-time macOS security prompt
+- macOS security flow: double-click → blocked → System Settings → Privacy & Security → Open Anyway → password prompt → runs. One-time only.
+- Note: Apple Silicon only for now
 
-**Done:** README.md, install_technical.md, my_data_reference.md, guide.md
+### 2. Handle `CONTEXT_FOR_CLAUDE.md`
+- This file should NOT be in the public repo
+- Options: delete it and rely on memory, or move it outside the repo to a local-only location
+- Decision pending
 
-**Remaining:**
-- `docs/install_nontechnical.md` — needs writing once PyInstaller is stable
+### 3. Make repo public
+- After install_nontechnical.md is written and CONTEXT_FOR_CLAUDE.md is handled
 
-### 2. Phase 6: PyInstaller executable (IN PROGRESS)
-- Fix Numbers CSV export bug (BOM/encoding issue in `read_config()`)
-- Test full flow end-to-end with a real zip code
-- Add `my_data.csv.example` to `dist/` for distribution
-- Zip `dist/` contents and upload to GitHub releases
-- Write `docs/install_nontechnical.md`
-- Later: Windows `.exe` build on Windows 10 machine
-Documentation structure is in place — next session should fill in content.
+### 4. Future: Windows + Intel Mac builds
+- Windows: needs a Windows machine or GitHub Actions CI
+- Intel Mac: needs Rosetta x86_64 conda environment build
 
-**File structure:**
-- `README.md` — landing page (what it does, legal basis, two install paths). Has section stubs.
-- `docs/install_technical.md` — Python/conda install path. Has section stubs.
-- `docs/install_nontechnical.md` — download executable, fill CSV, double-click. Has section stubs.
-- `GUIDE_DRAFT.md` — step-by-step Kostenerstattung process guide. Well-written, needs light editing and possibly moving to `docs/guide.md`.
-- `docs/my_data_reference.md` — field-by-field reference for `my_data.csv`. Fully drafted, may just need a review pass.
-
-**Content guidelines:**
-- Target audience: mix of technical and non-technical. Non-technical users use the PyInstaller executable (not yet built) and should not need to know what Python is.
-- Keep technical install and non-technical install in separate files — don't mix them.
-- `GUIDE_DRAFT.md` is the most complete piece; use it as the primary source for the guide content.
-- README legal section: cite §13 Abs. 3 SGB V and BPtK endorsement (`docs/BPtK_Ratgeber_Kostenerstattung.pdf`). Keep it short — 3–4 sentences max.
+### 5. Future: `my_data.numbers` direct support
+- Already implemented and working
+- May want to add `numbers-parser` hidden import to `busy_therapists.spec` if it's not bundling correctly
 
 ### 3. Phase 2b: Additional Email Templates ✅ COMPLETE
 
@@ -675,4 +691,4 @@ python /Users/sasan/spicy_projects/busy_therapists/src/scraper.py --city Berlin
 
 ---
 
-Last updated: 2026-04-05
+Last updated: 2026-04-21
