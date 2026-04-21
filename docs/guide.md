@@ -1,4 +1,4 @@
-# Finding a Therapist in Germany — Step by Step
+# DON'T PANIC — your Hitchhiker's Guide to finding a therapist in Germany
 
 Finding a free spot for therapy in Germany is tricky, and it can be even more difficult if you have public health insurance or need therapy in a language other than German. This tool not only helps you find and email therapists in your area, it can also help you in a process that gives you access to more therapists through your public health insurace. If you can showcase that there are no therapists available to you within the next three months, you may demand that your public health insurance pays for a licensed therapist out of their network. This tool guides and helps you in the bureaucratic process.
 
@@ -7,7 +7,8 @@ Finding a free spot for therapy in Germany is tricky, and it can be even more di
 
 ## How this works
 - Copy `my_data.csv.example`, then rename the copy `my_data.csv`. Fill in your details and filters in `my_data.csv`
-   - In case you're on a Windows computer and unfamiliar with csv files, you can open them with Excel for easier readability.
+   - **Windows:** you can open it with Excel for easier readability.
+   - **macOS:** you can open it in the Numbers app. Numbers will automatically save it in its own format — as long as the file is still named `my_data`, the tool will find it. No CSV export needed. If you happen to have both a `my_data.csv` and a `my_data.numbers`, the Numbers file takes priority.
    - At different stages of the process, you may update this file accordingly.
 - Run the main file and pick a numbered option from the menu
   - **Python users:** `python main.py` in the project folder

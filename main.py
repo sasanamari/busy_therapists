@@ -123,9 +123,41 @@ GENDER_MAP = {
 # Config
 # ---------------------------------------------------------------------------
 
+def _cell_to_str(value) -> str:
+    """Convert a numbers-parser cell value to a clean string."""
+    if value is None:
+        return ""
+    if isinstance(value, float) and value.is_integer():
+        return str(int(value))
+    return str(value).strip()
+
+
 def read_config(csv_path: Path) -> dict:
-    """Read my_data.csv into a dict of {field: value}. Skips header row."""
+    """
+    Read my_data into a dict of {field: value}. Skips header row.
+    Prefers my_data.numbers (if present) over my_data.csv.
+    """
+    numbers_path = csv_path.with_suffix(".numbers")
+    if numbers_path.exists():
+        try:
+            from numbers_parser import Document
+            doc = Document(str(numbers_path))
+            print(f"  Using {numbers_path.name}")
+            table = doc.sheets[0].tables[0]
+            config = {}
+            for i, row in enumerate(table.rows()):
+                if i == 0:
+                    continue  # skip header row
+                if len(row) >= 2 and row[0].value:
+                    field = _cell_to_str(row[0].value)
+                    value = _cell_to_str(row[1].value)
+                    config[field] = value
+            return config
+        except Exception as e:
+            print(f"  WARNING: Could not read {numbers_path.name} ({e}), falling back to {csv_path.name}.")
+
     config = {}
+    print(f"  Using {csv_path.name}")
     with open(csv_path, "r", encoding="utf-8-sig", newline="") as f:
         sample = f.read(1024)
         f.seek(0)
@@ -819,7 +851,8 @@ MENU = """
       insurance                              (Application date field filled in)
   7   Appeal a rejection                     my_data.csv + private_therapists.csv
                                              (Rejection date field filled in)
-  8   Legal threat — being ignored           my_data.csv
+  8   Threat of legal action —               my_data.csv
+      being ignored
                                              (Application date + Follow-up date)
   ─────────────────────────────────────────────────────────────────────────
 """
@@ -839,12 +872,14 @@ def main():
     print("  Therapy Finder — Kostenerstattung Tool")
     print("=" * 60)
 
-    if not csv_path.exists():
+    numbers_path = csv_path.with_suffix(".numbers")
+    if not csv_path.exists() and not numbers_path.exists():
         print("\nERROR: my_data.csv not found.")
         print("Copy my_data.csv.example → my_data.csv, fill it in, and run again.")
         sys.exit(1)
 
-    print("\nReading my_data.csv...")
+    config_file = numbers_path.name if numbers_path.exists() else csv_path.name
+    print(f"\nReading {config_file}...")
     raw_config = read_config(csv_path)
     errors, warnings = validate_config(raw_config)
 

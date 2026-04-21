@@ -43,6 +43,7 @@ env/
 # Project-specific
 data/
 output/
+dist_test/
 user_config.json
 *.log
 

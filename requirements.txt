@@ -1,6 +1,9 @@
 # PDF generation
 fpdf2>=2.7.0
 
+# Optional: read my_data.numbers directly (macOS Numbers app)
+numbers-parser>=4.0.0
+
 # Phase 1: Web scraping
 requests>=2.31.0
 beautifulsoup4>=4.12.0
