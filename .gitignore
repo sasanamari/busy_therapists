@@ -44,6 +44,8 @@ env/
 data/
 output/
 dist_test/
+build/
+*.zip
 user_config.json
 *.log
 
