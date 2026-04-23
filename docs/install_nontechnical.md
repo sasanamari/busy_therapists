@@ -94,3 +94,24 @@ A terminal window opens and the tool loads your data, then shows a numbered menu
 Type a number and press Enter to run that option. Read the [step-by-step guide](guide.md) to understand which option to use and when.
 
 When the tool finishes, the terminal window stays open showing `[Process completed]`. You can close it with **Cmd+W**.
+
+---
+
+## Output files
+
+After the first run, a folder called `output/` will appear next to the app. The tool manages this automatically — you don't need to touch it to follow the guide.
+
+**If you want to start fresh:** delete the relevant file from `output/` before running the tool again. The next run will create a new one. (For example, if you ran option 4 with the wrong filters, delete `output/busy_therapists.csv` and run again.)
+
+For reference, here's what each file is:
+
+| File | What it is |
+|---|---|
+| `busy_therapists.csv` | Therapists contacted for general outreach (options 1 & 4) |
+| `probationary_therapists.csv` | Therapists contacted for probationary sessions (option 3) |
+| `private_therapists.csv` | Private therapists contacted for Kostenerstattung (option 2) |
+| `contact_log.pdf` | Formatted PDF of your contact log, generated when you run option 5 — attach this to your insurance application |
+| `emails.html` | Your generated emails — open in a browser to send |
+| `therapists.txt` | Human-readable list of therapists found in the most recent scraper run |
+
+Each CSV **appends** new results on every run — useful if you're building up your contact list over multiple sessions.
