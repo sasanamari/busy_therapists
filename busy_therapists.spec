@@ -66,9 +66,11 @@ coll = COLLECT(
     name="busy_therapists",
 )
 
-app = BUNDLE(
-    coll,
-    name="busy_therapists.app",
-    icon=None,
-    bundle_identifier=None,
-)
+import sys as _sys
+if _sys.platform == "darwin":
+    app = BUNDLE(
+        coll,
+        name="busy_therapists.app",
+        icon=None,
+        bundle_identifier=None,
+    )
