@@ -1,0 +1,52 @@
+name: Build Windows installer
+
+# Triggered manually from the GitHub Actions tab — not on every push.
+# Use this when you're ready to cut a new release.
+on:
+  workflow_dispatch:
+
+jobs:
+
+  # Runs on a Windows machine provided by GitHub.
+  # Download the artifact from the Actions tab after the run completes,
+  # then upload it manually to the GitHub release.
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pyinstaller
+
+      - name: Build with PyInstaller
+        run: pyinstaller busy_therapists.spec --clean -y
+
+      - name: Create launcher script
+        # A .bat file is the Windows equivalent of the .command launcher on macOS.
+        # It opens a terminal, runs the app, and keeps the window open (pause) so
+        # the user can read the output before it closes.
+        shell: pwsh
+        run: |
+          $bat = "@echo off`ncd /d `"%~dp0`"`nbusy_therapists\busy_therapists.exe`npause"
+          Set-Content -Path "dist\Run Therapy Finder.bat" -Value $bat -Encoding utf8
+
+      - name: Copy example data file
+        shell: pwsh
+        run: Copy-Item my_data.csv.example dist\my_data.csv.example
+
+      - name: Upload artifact
+        # Uploads the dist folder contents directly — GitHub wraps it in a zip on download,
+        # so the user gets a single zip with no nesting.
+        uses: actions/upload-artifact@v4
+        with:
+          name: TherapyFinder_Windows
+          path: |
+            dist/busy_therapists
+            dist/Run Therapy Finder.bat
+            dist/my_data.csv.example

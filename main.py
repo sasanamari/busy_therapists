@@ -27,12 +27,14 @@ def _runtime_dir() -> Path:
     """Path to the executable's directory — where my_data.csv and output/ live."""
     if getattr(sys, "frozen", False):
         exe = Path(sys.executable)
-        # Inside a .app bundle the executable is at
-        # SomeApp.app/Contents/MacOS/exe — go up to the folder containing the .app
+        # On macOS, the executable is inside SomeApp.app/Contents/MacOS/ —
+        # walk up to find the .app bundle and return its parent folder.
         for parent in exe.parents:
             if parent.suffix == ".app":
                 return parent.parent
-        return exe.parent
+        # On Windows, the executable is inside busy_therapists/ —
+        # my_data.csv lives one level up, next to the busy_therapists/ folder.
+        return exe.parent.parent
     return Path(__file__).parent
 
 BUNDLE_DIR = _bundle_dir()
