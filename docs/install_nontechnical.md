@@ -2,14 +2,17 @@
 
 > You don't need to install Python or use a terminal. Just download the app, fill in one file, and double-click to run.
 >
-> **This app currently runs on macOS (Apple Silicon only — M1, M2, M3 etc chips). Windows and Intel Mac support is planned.**
+> **Available for macOS (Apple Silicon and Intel) and Windows.**
 
 ---
 
 ## Step 1: Download the app
 
 1. Go to the [latest release on GitHub](https://github.com/sasanamari/busy_therapists/releases/latest)
-2. Download `TherapyFinder_macOS.zip`
+2. Download the zip for your machine:
+   - **Mac with M1/M2/M3/M4 chip:** `TherapyFinder_macOS_arm64.zip`
+   - **Mac with Intel chip:** `TherapyFinder_macOS_intel.zip`
+   - **Windows:** `TherapyFinder_Windows.zip`
 3. Double-click the zip file to unzip it — a folder called `busy_therapists` will appear
 4. Move that folder somewhere convenient, like your Desktop or Documents
 
@@ -17,25 +20,27 @@
 
 ## Step 2: Set up your data file
 
-The tool reads your personal details from a file called `my_data.csv` (or `my_data.numbers`). A template is included in the download.
+The tool reads your personal details from a file called `my_data.csv`. A template is included in the download.
 
-1. Open the `busy_therapists` folder — you should see these files:
+1. Open the `busy_therapists` folder — you should see a `my_data.csv.example` file alongside the app and launcher. (The screenshot below shows macOS — Windows looks similar but without the `.app` and `.command` files.)
 
    ![Folder contents showing busy_therapists folder, busy_therapists.app, my_data.csv, and Run Therapy Finder.command](screenshots/01_folder_contents.png)
 
 2. Make a copy of `my_data.csv.example` and rename the copy to `my_data.csv`
-   - **How to copy on Mac:** right-click the file → Duplicate, then rename it
+   - **Mac:** right-click → Duplicate, then rename it
+   - **Windows:** right-click → Copy, then right-click → Paste, then rename it
    - The file must be named exactly `my_data.csv` — the tool won't find it otherwise
 
 3. Open your `my_data.csv`:
-   - **Easiest option:** double-click — it opens in Numbers. Numbers will save it automatically in its own format, and the tool will still find it. No need to export back to CSV.
-   - **Alternatively:** right-click → Open With → Excel or Google Sheets
+   - **Mac (easiest):** double-click — it opens in Numbers. Numbers saves it automatically in its own format and the tool will still find it. No CSV export needed.
+   - **Mac / Windows — Excel:** right-click → Open With → Excel. If the file opens with all the content squashed into column A, go to **Data → Text to Columns**, choose **Delimited**, click Next, tick **Comma** as the delimiter, and click Finish. The columns should split correctly.
+   - **Google Sheets (recommended if you don't have Excel or Numbers):** go to [sheets.new](https://sheets.new) in your browser — this opens a blank spreadsheet. Then go to **File → Import**, upload `my_data.csv`, and choose **Comma** as the separator. Google Sheets is free and works in any browser with no installation. If you've never used it before, [this short intro](https://support.google.com/docs/answer/6000292) covers the basics.
 
 4. Fill in the **Your data** column. The **Notes** column explains each field. You don't need to fill everything in right away — come back and update it as you progress through the process.
+   - For a full explanation of every field, see the [my_data.csv reference](my_data_reference.md).
+5. Save the file.
 
-5. Save the file (Cmd+S, or just close Numbers — it saves automatically).
 
-For a full explanation of every field, see the [my_data.csv reference](my_data_reference.md).
 
 > `my_data.csv` stays on your computer — it is never uploaded anywhere.
 
@@ -43,45 +48,44 @@ For a full explanation of every field, see the [my_data.csv reference](my_data_r
 
 ## Step 3: Run the tool
 
-Double-click `Run Therapy Finder.command`.
+- **Mac:** double-click `Run Therapy Finder.command`
+- **Windows:** double-click `Run Therapy Finder.bat`
 
-**The first time you run it, macOS will block it** — this is normal for apps downloaded from the internet that aren't from the App Store.
+### Security warnings (first run only)
 
-### One-time security approval (macOS only)
+Downloaded apps that aren't from an official store may trigger a security warning the first time you run them. This is normal — here's how to handle it on each platform.
 
-**1.** When you double-click `Run Therapy Finder.command`, you'll see this warning:
+<details>
+<summary><strong>macOS — if the app is blocked (click to expand)</strong></summary>
+
+macOS may block the launcher the first time. If it does:
+
+**1.** You'll see this warning — click **Done** (not "Move to Trash"):
 
 ![macOS warning: "Run Therapy Finder.command" Not Opened](screenshots/02_security_warning.png)
 
-Click **Done** (not "Move to Trash").
-
----
-
-**2.** Open **System Settings** → **Privacy & Security**. Scroll down to the **Security** section. You'll see a message saying the file was blocked, with an **Open Anyway** button next to it:
+**2.** Open **System Settings** → **Privacy & Security**. Scroll down to the Security section and click **Open Anyway**:
 
 ![Privacy & Security settings showing "Open Anyway" button](screenshots/03_privacy_and_security.png)
 
-Click **Open Anyway**.
-
----
-
-**3.** A second confirmation dialog will appear:
+**3.** A second confirmation will appear — click **Open Anyway** again:
 
 ![Second confirmation dialog with "Open Anyway" button](screenshots/04_open_anyway.png)
 
-Click **Open Anyway** again.
+**4.** Confirm with Touch ID or your Mac login password:
 
----
+<img src="screenshots/05_password_prompt.png" width="40%">
 
-**4.** You'll be asked to confirm with your password or Touch ID:
+**You only need to do this once.** After the first approval it launches directly.
 
-![Password/Touch ID prompt](screenshots/05_password_prompt.png)
+</details>
 
-Use Touch ID or click **Use Password...** and enter your Mac login password.
+<details>
+<summary><strong>Windows — if SmartScreen blocks the app (click to expand)</strong></summary>
 
----
+Windows may show a "Windows protected your PC" warning the first time. If it does, click **More info** → **Run anyway**. You only need to do this once.
 
-**That's it — you only need to do this once.** After the first approval, double-clicking `Run Therapy Finder.command` will launch the tool directly.
+</details>
 
 ---
 
@@ -93,7 +97,7 @@ A terminal window opens and the tool loads your data, then shows a numbered menu
 
 Type a number and press Enter to run that option. Read the [step-by-step guide](guide.md) to understand which option to use and when.
 
-When the tool finishes, the terminal window stays open showing `[Process completed]`. You can close it with **Cmd+W**.
+When the tool finishes, the terminal window stays open. You can close it — on Mac with **Cmd+W**, on Windows just close the window normally.
 
 ---
 
